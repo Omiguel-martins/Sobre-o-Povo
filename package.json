@@ -1,0 +1,14 @@
+{
+  "name": "sobre-o-povo",
+  "version": "1.0.0",
+  "description": "Portal de Notícias Sobre o Povo",
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build-registry.js",
+    "dev": "node scripts/build-registry.js && vite",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "vite": "^5.2.0"
+  }
+}

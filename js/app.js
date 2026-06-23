@@ -409,7 +409,12 @@ function renderErrorState(title, message) {
   return `
     <div class="error-state">
       <h2 class="error-title">${title}</h2>
-      <p class="error-m// Renderiza a Área Administrativa (CMS / Manager)
+      <p class="error-message">${message}</p>
+    </div>
+  `;
+}
+
+// Renderiza a Área Administrativa (CMS / Manager)
 function renderManager() {
   mainContent.innerHTML = `
     <div class="admin-panel-container">

@@ -86,7 +86,7 @@ function setupEventListeners() {
 async function loadNoticiasIndex() {
   try {
     // Vite ou qualquer servidor local serve arquivos na raiz relativa
-    const response = await fetch('./noticias/index.json');
+    const response = await fetch('./index.json');
     if (!response.ok) {
       throw new Error('Falha ao carregar o índice de notícias');
     }
@@ -328,7 +328,7 @@ async function renderArticle(id) {
 
   try {
     // Carrega o arquivo Markdown bruto do servidor
-    const response = await fetch(`./noticias/${meta.fileName}`);
+    const response = await fetch(`./${meta.fileName}`);
     if (!response.ok) {
       throw new Error('Falha ao carregar o conteúdo do arquivo .md');
     }
@@ -648,7 +648,7 @@ function renderManager() {
     try {
       // Passo 1: Buscar o index.json existente do repositório para ler o conteúdo atual e o SHA
       btnSubmit.textContent = 'Buscando índice de notícias atual...';
-      const indexUrl = `https://api.github.com/repos/${owner}/${repo}/contents/noticias/index.json?ref=${branch}`;
+      const indexUrl = `https://api.github.com/repos/${owner}/${repo}/contents/index.json?ref=${branch}`;
       
       let indexSha = null;
       let noticiasList = [];
@@ -669,7 +669,7 @@ function renderManager() {
       const slug = slugify(title);
       const dateNow = new Date().toISOString().split('T')[0];
       const fileName = `${dateNow}-${slug}.md`;
-      const fileUrl = `https://api.github.com/repos/${owner}/${repo}/contents/noticias/${fileName}`;
+      const fileUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${fileName}`;
       
       // Formatação da data ISO local simples
       const isoDate = new Date().toISOString().replace(/\.\d+Z$/, '-03:00');

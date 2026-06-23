@@ -418,8 +418,9 @@ function renderErrorState(title, message) {
 function renderManager() {
   mainContent.innerHTML = `
     <div class="admin-panel-container">
-      <!-- Coluna Esquerda: Formulário -->
-      <div class="admin-form-card">
+      <!-- Coluna Esquerda: Formulário e Lista de Matérias -->
+      <div style="display: flex; flex-direction: column; gap: 2rem;">
+        <div class="admin-form-card">
         <h2 class="admin-form-title">Painel de Publicação (Git CMS)</h2>
         
         <div id="manager-alert-container"></div>
@@ -495,7 +496,13 @@ function renderManager() {
         </form>
       </div>
 
-      <!-- Coluna Direita: Preview Visual -->
+      <div class="admin-form-card">
+        <h2 class="admin-form-title" style="font-size: 1.5rem; margin-bottom: 1.5rem;">Gerenciar Matérias Existentes</h2>
+        <div id="manager-list-container"></div>
+      </div>
+    </div> <!-- Fim da coluna esquerda flex -->
+
+    <!-- Coluna Direita: Preview Visual -->
       <div class="admin-preview-column">
         <h3 class="admin-preview-title">
           <span></span> Visualização em Tempo Real (Desktop)
@@ -779,6 +786,7 @@ ${content}`;
       
       // Atualiza o estado das notícias em memória local do navegador para exibição imediata
       state.noticias = noticiasList;
+      renderManagerArticlesList();
 
       // Rola o painel do formulário para o topo para ver o alerta de sucesso
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -796,8 +804,165 @@ ${content}`;
     }
   });
 
-  // Atualiza o preview inicialmente
+  // Função para renderizar a lista de notícias publicadas no painel
+  function renderManagerArticlesList() {
+    const listContainer = document.getElementById('manager-list-container');
+    if (!listContainer) return;
+    
+    if (state.noticias.length === 0) {
+      listContainer.innerHTML = '<p style="color: var(--color-text-light);">Nenhuma notícia publicada ainda.</p>';
+      return;
+    }
+    
+    listContainer.innerHTML = `
+      <ul class="admin-articles-list" style="list-style: none; padding: 0; margin: 0;">
+        ${state.noticias.map(noticia => `
+          <li style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 0; border-bottom: 1px solid var(--color-border); gap: 1rem;">
+            <div style="flex: 1; min-width: 0;">
+              <strong style="display: block; font-family: var(--font-headings); font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${noticia.title}</strong>
+              <span style="font-size: 0.8rem; color: var(--color-text-light);">${noticia.category} &bull; ${formatFriendlyDate(noticia.date)}</span>
+            </div>
+            <button class="btn-delete-article" data-id="${noticia.id}" data-filename="${noticia.fileName}" data-title="${noticia.title}" style="background-color: #e74c3c; color: white; border: none; padding: 0.4rem 0.8rem; border-radius: 4px; font-size: 0.8rem; cursor: pointer; font-weight: bold; transition: background-color 0.2s;">
+              Excluir
+            </button>
+          </li>
+        `).join('')}
+      </ul>
+    `;
+    
+    // Adiciona event listeners para os botões de exclusão
+    const deleteButtons = listContainer.querySelectorAll('.btn-delete-article');
+    deleteButtons.forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        const id = btn.getAttribute('data-id');
+        const fileName = btn.getAttribute('data-filename');
+        const title = btn.getAttribute('data-title');
+        
+        const token = inToken.value.trim();
+        const owner = inOwner.value.trim();
+        const repo = inRepo.value.trim();
+        const branch = inBranch.value.trim();
+        
+        if (!token || !owner || !repo) {
+          alert('Por favor, preencha o Token, Usuário e Repositório no formulário acima para poder excluir matérias.');
+          inToken.focus();
+          return;
+        }
+        
+        if (confirm(`Tem certeza que deseja excluir permanentemente a notícia "${title}"?`)) {
+          await deleteArticle(id, fileName, title, token, owner, repo, branch, btn);
+        }
+      });
+    });
+  }
+
+  // Função para deletar a matéria via API do GitHub
+  async function deleteArticle(id, fileName, title, token, owner, repo, branch, btnElement) {
+    const originalText = btnElement.textContent;
+    btnElement.disabled = true;
+    btnElement.textContent = 'Excluindo...';
+    
+    const headers = {
+      'Authorization': `token ${token}`,
+      'Accept': 'application/vnd.github.v3+json',
+      'Content-Type': 'application/json'
+    };
+    
+    try {
+      // 1. Buscar o SHA do arquivo Markdown da notícia no GitHub
+      const fileUrl = `https://api.github.com/repos/${owner}/${repo}/contents/noticias/${fileName}?ref=${branch}`;
+      const fileResponse = await fetch(fileUrl, { headers });
+      
+      let fileSha = null;
+      if (fileResponse.ok) {
+        const fileData = await fileResponse.json();
+        fileSha = fileData.sha;
+      } else if (fileResponse.status !== 404) {
+        throw new Error(`Falha ao obter dados do arquivo da notícia. Status: ${fileResponse.status}`);
+      }
+      
+      // 2. Se o arquivo existe no GitHub, deletar o arquivo .md
+      if (fileSha) {
+        const deleteUrl = `https://api.github.com/repos/${owner}/${repo}/contents/noticias/${fileName}`;
+        const deletePayload = {
+          message: `Excluir noticia: ${title}`,
+          sha: fileSha,
+          branch: branch
+        };
+        
+        const deleteResponse = await fetch(deleteUrl, {
+          method: 'DELETE',
+          headers: headers,
+          body: JSON.stringify(deletePayload)
+        });
+        
+        if (!deleteResponse.ok) {
+          const errData = await deleteResponse.json();
+          throw new Error(`Erro ao deletar o arquivo .md no GitHub: ${errData.message || deleteResponse.statusText}`);
+        }
+      }
+      
+      // 3. Buscar o index.json para obter o SHA atualizado do índice
+      const indexUrl = `https://api.github.com/repos/${owner}/${repo}/contents/noticias/index.json?ref=${branch}`;
+      const indexResponse = await fetch(indexUrl, { headers });
+      
+      let indexSha = null;
+      let noticiasList = [];
+      
+      if (indexResponse.ok) {
+        const indexData = await indexResponse.json();
+        indexSha = indexData.sha;
+        const decodedContent = btou(indexData.content.replace(/\s/g, ''));
+        noticiasList = JSON.parse(decodedContent);
+      } else {
+        throw new Error(`Falha ao ler o index.json do GitHub. Status: ${indexResponse.status}`);
+      }
+      
+      // 4. Remover a notícia do array e atualizar o index.json
+      noticiasList = noticiasList.filter(n => n.id !== id);
+      const updatedJsonString = JSON.stringify(noticiasList, null, 2);
+      
+      const jsonPayload = {
+        message: `Excluir noticia do index: ${title}`,
+        content: utob(updatedJsonString),
+        branch: branch,
+        sha: indexSha
+      };
+      
+      const jsonResponse = await fetch(indexUrl, {
+        method: 'PUT',
+        headers: headers,
+        body: JSON.stringify(jsonPayload)
+      });
+      
+      if (!jsonResponse.ok) {
+        const errData = await jsonResponse.json();
+        throw new Error(`Erro ao atualizar index.json no GitHub: ${errData.message || jsonResponse.statusText}`);
+      }
+      
+      // 5. Atualizar o estado local e re-renderizar a lista no painel
+      state.noticias = noticiasList;
+      renderManagerArticlesList();
+      
+      alertContainer.innerHTML = `
+        <div class="alert alert-success">
+          ✅ Matéria "${title}" excluída com sucesso! A Vercel atualizará o site em alguns segundos.
+        </div>
+      `;
+      
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      
+    } catch (error) {
+      console.error('Erro ao deletar matéria:', error);
+      alert(`Erro ao Excluir: ${error.message || 'Falha de comunicação com o GitHub.'}`);
+      btnElement.disabled = false;
+      btnElement.textContent = originalText;
+    }
+  }
+
+  // Atualiza o preview e a lista inicialmente
   updatePreview();
+  renderManagerArticlesList();
 }
 
 // Executa a inicialização diretamente (módulos ES já rodam com o DOM pronto)

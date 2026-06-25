@@ -154,6 +154,7 @@ function renderHome() {
     return;
   }
 
+  let htmlContent = '';
   let filteredNoticias = [...state.noticias];
   
   if (state.currentCategory) {
@@ -181,8 +182,6 @@ function renderHome() {
     return;
   }
 
-  let htmlContent = '';
-  
   if (state.currentCategory || state.searchQuery) {
     htmlContent += renderFilterInfoBar();
   }
@@ -190,14 +189,49 @@ function renderHome() {
   if (state.currentCategory || state.searchQuery) {
     htmlContent += `<div class="news-grid">${filteredNoticias.map(renderNewsCard).join('')}</div>`;
   } else {
-    const featured = filteredNoticias.find(n => n.featured) || filteredNoticias[0];
-    const remaining = filteredNoticias.filter(n => n.id !== featured.id);
+    // 1. Identificar o dia mais recente ativo no portal
+    const latestArticleDate = new Date(filteredNoticias[0].date);
+    const latestDateStr = latestArticleDate.toISOString().split('T')[0];
+
+    // 2. Separar as notícias de "Hoje" (último dia ativo) das notícias de dias anteriores
+    const todayNoticias = filteredNoticias.filter(n => {
+      const itemDateStr = new Date(n.date).toISOString().split('T')[0];
+      return itemDateStr === latestDateStr;
+    });
+
+    const olderNoticias = filteredNoticias.filter(n => {
+      const itemDateStr = new Date(n.date).toISOString().split('T')[0];
+      return itemDateStr !== latestDateStr;
+    });
+
+    // 3. A Notícia Principal é a mais recente de hoje (ou a marcada como destaque se houver uma de hoje com destaque)
+    const featured = todayNoticias.find(n => n.featured) || todayNoticias[0];
     
-    const latestItems = remaining.slice(0, 3);
-    const gridItems = remaining.slice(3);
+    // 4. Outras notícias de hoje vão para a barra lateral
+    const otherTodayNoticias = todayNoticias.filter(n => n.id !== featured.id);
+
+    // Se houver poucas notícias de hoje para preencher a barra lateral, completamos com as mais recentes anteriores
+    let sidebarItems = [...otherTodayNoticias];
+    if (sidebarItems.length < 3) {
+      const fillCount = 3 - sidebarItems.length;
+      const fillItems = olderNoticias.slice(0, fillCount);
+      sidebarItems = [...sidebarItems, ...fillItems];
+    }
+
+    // As notícias restantes (que não são a principal nem estão na barra lateral) vão para o grid "Leia Mais"
+    const sidebarIds = new Set(sidebarItems.map(n => n.id));
+    const gridItems = olderNoticias.filter(n => !sidebarIds.has(n.id) && n.id !== featured.id);
+
+    // Título da barra lateral: Dinâmico conforme a presença de outras notícias de hoje
+    const options = { day: 'numeric', month: 'long' };
+    const formattedTodayDate = latestArticleDate.toLocaleDateString('pt-BR', options);
+    const sidebarTitle = otherTodayNoticias.length > 0 
+      ? `Neste Dia (${formattedTodayDate})` 
+      : 'Últimas Notícias';
 
     htmlContent += `
       <div class="home-grid">
+        <!-- Lado Esquerdo: Notícia Principal do Dia -->
         <article class="featured-card">
           <a href="#/noticia/${featured.slug}" class="featured-img-container">
             <img src="${featured.image}" alt="${featured.title}" loading="lazy" />
@@ -217,10 +251,11 @@ function renderHome() {
           </div>
         </article>
 
+        <!-- Lado Direito: Outras Notícias / Barra Lateral -->
         <aside class="sidebar-section">
-          <h3 class="section-title">Últimas Notícias</h3>
+          <h3 class="section-title">${sidebarTitle}</h3>
           <div class="latest-list">
-            ${latestItems.map(renderLatestSidebarItem).join('')}
+            ${sidebarItems.map(renderLatestSidebarItem).join('')}
           </div>
         </aside>
       </div>

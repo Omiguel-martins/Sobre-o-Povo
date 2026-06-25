@@ -1,4 +1,11 @@
-import { parseFrontmatter, formatFriendlyDate, getCategoryColor } from './utils.js';
+import { formatFriendlyDate, getCategoryColor } from './utils.js';
+
+// Configurações do Supabase obtidas do usuário
+const supabaseUrl = 'https://wnvpkbddmhnznybvmqam.supabase.co';
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndudnBrYmRkbWhuem55YnZtcWFtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzMjEzODgsImV4cCI6MjA5Nzg5NzM4OH0.q1OllfKvmIhjoCNTCGPKQB_5opZIVgJc0L5_8BZj7Ew';
+
+// Inicializa o cliente do Supabase carregado globalmente no index.html
+const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
 // Estado global da aplicação
 const state = {
@@ -31,7 +38,6 @@ function updateHeaderDate() {
     const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
     const today = new Date();
     const dateStr = today.toLocaleDateString('pt-BR', options);
-    // Capitaliza a primeira letra da data
     dateElement.textContent = dateStr.charAt(0).toUpperCase() + dateStr.slice(1);
   }
 }
@@ -45,17 +51,16 @@ function setupTheme() {
 // Atualiza o ícone do tema (sol/lua)
 function updateThemeIcon() {
   if (state.theme === 'dark') {
-    themeToggleBtn.innerHTML = '☀️'; // Sol para alternar para o claro
+    themeToggleBtn.innerHTML = '☀️';
     themeToggleBtn.setAttribute('title', 'Mudar para o Modo Claro');
   } else {
-    themeToggleBtn.innerHTML = '🌙'; // Lua para alternar para o escuro
+    themeToggleBtn.innerHTML = '🌙';
     themeToggleBtn.setAttribute('title', 'Mudar para o Modo Escuro');
   }
 }
 
 // Configura ouvintes de eventos globais
 function setupEventListeners() {
-  // Alternar Tema
   themeToggleBtn.addEventListener('click', () => {
     state.theme = state.theme === 'light' ? 'dark' : 'light';
     document.documentElement.setAttribute('data-theme', state.theme);
@@ -63,7 +68,6 @@ function setupEventListeners() {
     updateThemeIcon();
   });
 
-  // Busca de Notícias
   searchForm.addEventListener('submit', (e) => {
     e.preventDefault();
     state.searchQuery = searchInput.value.trim();
@@ -78,24 +82,24 @@ function setupEventListeners() {
     }
   });
 
-  // Roteamento ao mudar o Hash da URL
   window.addEventListener('hashchange', handleRouting);
 }
 
-// Carrega o arquivo noticias/index.json
+// Carrega as notícias diretamente da tabela do Supabase
 async function loadNoticiasIndex() {
   try {
-    // Vite ou qualquer servidor local serve arquivos na raiz relativa
-    const response = await fetch('./noticias/index.json');
-    if (!response.ok) {
-      throw new Error('Falha ao carregar o índice de notícias');
-    }
-    state.noticias = await response.json();
+    const { data, error } = await supabaseClient
+      .from('noticias')
+      .select('*')
+      .order('date', { ascending: false });
+    
+    if (error) throw error;
+    state.noticias = data || [];
   } catch (error) {
-    console.error('Erro ao buscar as notícias:', error);
+    console.error('Erro ao buscar as notícias no Supabase:', error);
     mainContent.innerHTML = renderErrorState(
       'Erro de Conexão',
-      'Não foi possível carregar as notícias. Por favor, verifique se executou o script de compilação ou atualize a página.'
+      'Não foi possível carregar as notícias do banco de dados do Supabase. Verifique a tabela.'
     );
   }
 }
@@ -104,7 +108,6 @@ async function loadNoticiasIndex() {
 function handleRouting() {
   const hash = window.location.hash;
   
-  // Limpa estados de filtro ao navegar
   if (hash === '' || hash === '#/') {
     state.currentCategory = null;
     updateActiveNavLink(null);
@@ -115,17 +118,15 @@ function handleRouting() {
     updateActiveNavLink(category);
     renderHome();
   } else if (hash.startsWith('#/noticia/')) {
-    const noticiaId = hash.replace('#/noticia/', '');
-    renderArticle(noticiaId);
+    const slug = hash.replace('#/noticia/', '');
+    renderArticle(slug);
   } else if (hash === '#/manager') {
     updateActiveNavLink(null);
     renderManager();
   } else {
-    // Rota padrão desconhecida
     mainContent.innerHTML = renderErrorState('Página Não Encontrada', 'A seção que você está procurando não existe.');
   }
   
-  // Rola para o topo ao mudar de página
   window.scrollTo(0, 0);
 }
 
@@ -145,9 +146,14 @@ function updateActiveNavLink(category) {
 
 // Renderiza a Página Inicial (Home) com grid e sidebar
 function renderHome() {
-  if (state.noticias.length === 0) return;
+  if (state.noticias.length === 0) {
+    mainContent.innerHTML = renderErrorState(
+      'Nenhuma Notícia Publicada',
+      'Não encontramos nenhuma matéria cadastrada no banco de dados. Acesse o painel e publique a primeira!'
+    );
+    return;
+  }
 
-  // Filtra as notícias com base no estado atual
   let filteredNoticias = [...state.noticias];
   
   if (state.currentCategory) {
@@ -164,7 +170,6 @@ function renderHome() {
     );
   }
 
-  // Se nenhum resultado for encontrado
   if (filteredNoticias.length === 0) {
     mainContent.innerHTML = `
       ${renderFilterInfoBar()}
@@ -178,37 +183,30 @@ function renderHome() {
 
   let htmlContent = '';
   
-  // Renderiza a barra com informações de filtro se houver busca ou categoria ativa
   if (state.currentCategory || state.searchQuery) {
     htmlContent += renderFilterInfoBar();
   }
 
-  // Define layout do feed
-  // Se houver filtros ativos, renderiza direto um grid padrão de notícias
   if (state.currentCategory || state.searchQuery) {
     htmlContent += `<div class="news-grid">${filteredNoticias.map(renderNewsCard).join('')}</div>`;
   } else {
-    // Se for a Home limpa, cria o layout Premium assimétrico (Destaque Principal + Últimas Matérias + Feed Geral)
     const featured = filteredNoticias.find(n => n.featured) || filteredNoticias[0];
     const remaining = filteredNoticias.filter(n => n.id !== featured.id);
     
-    // As próximas 3 notícias vão para a sidebar "Mais Recentes"
     const latestItems = remaining.slice(0, 3);
-    // As restantes vão para o grid secundário
     const gridItems = remaining.slice(3);
 
     htmlContent += `
       <div class="home-grid">
-        <!-- Lado Esquerdo: Destaque Principal -->
         <article class="featured-card">
-          <a href="#/noticia/${featured.id}" class="featured-img-container">
+          <a href="#/noticia/${featured.slug}" class="featured-img-container">
             <img src="${featured.image}" alt="${featured.title}" loading="lazy" />
           </a>
           <div class="featured-card-content">
             <span class="category-badge" style="background-color: ${getCategoryColor(featured.category)}">
               ${featured.category}
             </span>
-            <a href="#/noticia/${featured.id}">
+            <a href="#/noticia/${featured.slug}">
               <h2 class="featured-title">${featured.title}</h2>
             </a>
             <p class="featured-summary">${featured.summary}</p>
@@ -219,7 +217,6 @@ function renderHome() {
           </div>
         </article>
 
-        <!-- Lado Direito: Sidebar Recentes -->
         <aside class="sidebar-section">
           <h3 class="section-title">Últimas Notícias</h3>
           <div class="latest-list">
@@ -229,7 +226,6 @@ function renderHome() {
       </div>
     `;
 
-    // Se houver mais notícias, renderiza a seção secundária de grid
     if (gridItems.length > 0) {
       htmlContent += `
         <h3 class="section-title" style="margin-top: 4rem; margin-bottom: 2rem;">Leia Mais</h3>
@@ -242,7 +238,6 @@ function renderHome() {
 
   mainContent.innerHTML = htmlContent;
   
-  // Limpa inputs de pesquisa ao clicar em limpar filtro
   const clearFilterBtn = document.getElementById('clear-filter-btn');
   if (clearFilterBtn) {
     clearFilterBtn.addEventListener('click', () => {
@@ -280,8 +275,8 @@ function renderLatestSidebarItem(noticia) {
         <span class="latest-category" style="color: ${getCategoryColor(noticia.category)}">${noticia.category}</span>
         <span class="latest-time">${formatFriendlyDate(noticia.date)}</span>
       </div>
-      <a href="#/noticia/${noticia.id}">
-        <h4 class="latest-title">${noticia.title}</h4>
+      <a href="#/noticia/${noticia.slug}">
+        <h4 class="latest-title">${noticia.slug}</h4>
       </a>
     </div>
   `;
@@ -291,14 +286,14 @@ function renderLatestSidebarItem(noticia) {
 function renderNewsCard(noticia) {
   return `
     <article class="news-card">
-      <a href="#/noticia/${noticia.id}" class="news-img-container">
+      <a href="#/noticia/${noticia.slug}" class="news-img-container">
         <img src="${noticia.image}" alt="${noticia.title}" loading="lazy" />
       </a>
       <div class="news-card-content">
         <span class="category-badge" style="background-color: ${getCategoryColor(noticia.category)}">
           ${noticia.category}
         </span>
-        <a href="#/noticia/${noticia.id}">
+        <a href="#/noticia/${noticia.slug}">
           <h3 class="news-title">${noticia.title}</h3>
         </a>
         <p class="news-summary">${noticia.summary}</p>
@@ -311,46 +306,32 @@ function renderNewsCard(noticia) {
   `;
 }
 
-// Renderiza a Página de Artigo Detalhado (Leitura Editorial)
-async function renderArticle(id) {
-  // Renderiza Skeleton Loader enquanto carrega o conteúdo
+// Renderiza a Página de Artigo Detalhado (Leitura Editorial via Supabase)
+async function renderArticle(slug) {
   mainContent.innerHTML = renderSkeletonLoader();
 
-  // Encontra a notícia correspondente no índice carregado
-  const meta = state.noticias.find(n => n.id === id);
-  if (!meta) {
-    mainContent.innerHTML = renderErrorState(
-      'Notícia Não Encontrada',
-      'Desculpe, o conteúdo que você está tentando acessar não existe ou foi removido do portal.'
-    );
-    return;
-  }
-
   try {
-    // Carrega o arquivo Markdown bruto do servidor
-    const response = await fetch(`./noticias/${meta.fileName}`);
-    if (!response.ok) {
-      throw new Error('Falha ao carregar o conteúdo do arquivo .md');
+    const { data: meta, error } = await supabaseClient
+      .from('noticias')
+      .select('*')
+      .eq('slug', slug)
+      .single();
+
+    if (error || !meta) {
+      mainContent.innerHTML = renderErrorState(
+        'Notícia Não Encontrada',
+        'Desculpe, o conteúdo que você está tentando acessar não existe ou foi removido do portal.'
+      );
+      return;
     }
-    const rawText = await response.text();
-    
-    // Faz o parse do frontmatter para separar o conteúdo markdown real
-    const { body } = parseFrontmatter(rawText);
-    
-    // Converte o Markdown em HTML usando marked.parse (disponível via CDN globalmente no index.html)
-    // Se o marked não tiver carregado por falha de CDN, usamos um fallback básico de quebra de parágrafo
+
     let bodyHtml = '';
     if (typeof marked !== 'undefined' && marked.parse) {
-      bodyHtml = marked.parse(body);
+      bodyHtml = marked.parse(meta.content);
     } else {
-      console.warn('Marked.js não está carregado. Usando fallback de rendering de texto plano.');
-      bodyHtml = body
-        .split('\n\n')
-        .map(p => p.startsWith('#') ? `<h3>${p.replace(/#/g, '').trim()}</h3>` : `<p>${p.trim()}</p>`)
-        .join('');
+      bodyHtml = `<p>${meta.content.replace(/\n\n/g, '</p><p>')}</p>`;
     }
 
-    // Renderiza a página final do artigo estilo Folha de S.Paulo
     mainContent.innerHTML = `
       <article class="article-page">
         <a href="#/" class="article-back-link">
@@ -397,9 +378,6 @@ function renderSkeletonLoader() {
       <div style="width: 250px; height: 16px; margin: 1.5rem 0;" class="skeleton"></div>
       <div class="skeleton-image skeleton" style="height: 350px;"></div>
       <div class="skeleton-text body-line skeleton"></div>
-      <div class="skeleton-text body-line skeleton"></div>
-      <div class="skeleton-text body-line skeleton" style="width: 92%;"></div>
-      <div class="skeleton-text body-line skeleton" style="width: 85%;"></div>
     </div>
   `;
 }
@@ -414,95 +392,159 @@ function renderErrorState(title, message) {
   `;
 }
 
-// Renderiza a Área Administrativa (CMS / Manager)
-function renderManager() {
+// Renderiza a Área Administrativa (CMS / Manager com Supabase Auth)
+async function renderManager() {
+  const { data: { session } } = await supabaseClient.auth.getSession();
+
+  if (!session) {
+    renderLoginForm();
+  } else {
+    renderAdminDashboard(session.user);
+  }
+}
+
+// Exibe formulário de Login do Administrador/Redator
+function renderLoginForm() {
+  mainContent.innerHTML = `
+    <div class="admin-panel-container" style="display: flex; justify-content: center; align-items: center; min-height: 50vh;">
+      <div class="admin-form-card" style="width: 100%; max-width: 450px;">
+        <h2 class="admin-form-title" style="text-align: center; margin-bottom: 2rem;">Acesso Administrativo</h2>
+        
+        <div id="login-alert-container"></div>
+        
+        <form id="login-form">
+          <div class="form-group">
+            <label class="form-label" for="login-email">Email</label>
+            <input type="email" class="form-control" id="login-email" required placeholder="seu-email@dominio.com" />
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label" for="login-password">Senha</label>
+            <input type="password" class="form-control" id="login-password" required placeholder="Digite sua senha" />
+          </div>
+          
+          <button type="submit" class="btn-publish" id="login-submit-btn" style="width: 100%; margin-top: 1rem;">
+            Fazer Login
+          </button>
+        </form>
+      </div>
+    </div>
+  `;
+
+  const loginForm = document.getElementById('login-form');
+  const loginEmail = document.getElementById('login-email');
+  const loginPassword = document.getElementById('login-password');
+  const loginBtn = document.getElementById('login-submit-btn');
+  const alertContainer = document.getElementById('login-alert-container');
+
+  loginForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    loginBtn.disabled = true;
+    loginBtn.textContent = 'Autenticando...';
+    alertContainer.innerHTML = '';
+
+    try {
+      const { data, error } = await supabaseClient.auth.signInWithPassword({
+        email: loginEmail.value.trim(),
+        password: loginPassword.value
+      });
+
+      if (error) throw error;
+
+      renderAdminDashboard(data.user);
+    } catch (error) {
+      console.error('Erro ao fazer login:', error);
+      alertContainer.innerHTML = `
+        <div class="alert alert-error">
+          ❌ Erro ao autenticar: ${error.message || 'Verifique seus dados e tente novamente.'}
+        </div>
+      `;
+      loginBtn.disabled = false;
+      loginBtn.textContent = 'Fazer Login';
+    }
+  });
+}
+
+// Exibe o painel administrativo completo para o usuário autenticado
+function renderAdminDashboard(user) {
   mainContent.innerHTML = `
     <div class="admin-panel-container">
       <!-- Coluna Esquerda: Formulário e Lista de Matérias -->
       <div style="display: flex; flex-direction: column; gap: 2rem;">
         <div class="admin-form-card">
-        <h2 class="admin-form-title">Painel de Publicação (Git CMS)</h2>
-        
-        <div id="manager-alert-container"></div>
-        
-        <form id="manager-form">
-          <div class="form-group">
-            <label class="form-label" for="m-token">Token de Acesso do GitHub (PAT)</label>
-            <input type="password" class="form-control" id="m-token" required placeholder="ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" />
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; border-bottom: 1px solid var(--color-border); padding-bottom: 1rem;">
+            <h2 class="admin-form-title" style="margin: 0;">Painel de Publicação (Supabase)</h2>
+            <button id="btn-logout" style="background-color: transparent; border: 1px solid var(--color-border); color: var(--color-text-light); padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; transition: all 0.2s;">
+              Sair (Logout)
+            </button>
           </div>
-
-          <div class="form-group row-flex">
-            <div>
-              <label class="form-label" for="m-owner">Usuário do GitHub</label>
-              <input type="text" class="form-control" id="m-owner" required placeholder="Ex: carlos-silva" />
+          
+          <div id="manager-alert-container"></div>
+          
+          <form id="manager-form">
+            <div class="form-group row-flex">
+              <div>
+                <label class="form-label" for="m-author">Autor / Repórter</label>
+                <input type="text" class="form-control" id="m-author" required placeholder="Ex: Redação" value="Redação" />
+              </div>
+              <div>
+                <label class="form-label" for="m-category">Editoria / Categoria</label>
+                <select class="form-control" id="m-category">
+                  <option value="Brasil">Brasil</option>
+                  <option value="Política">Política</option>
+                  <option value="Economia">Economia</option>
+                  <option value="Cultura">Cultura</option>
+                  <option value="Opinião">Opinião</option>
+                </select>
+              </div>
             </div>
-            <div>
-              <label class="form-label" for="m-repo">Nome do Repositório</label>
-              <input type="text" class="form-control" id="m-repo" required placeholder="Ex: sobre-o-povo" />
+
+            <div class="form-group">
+              <label class="form-label" for="m-title">Título da Notícia</label>
+              <input type="text" class="form-control" id="m-title" required placeholder="Digite um título impactante" />
             </div>
-          </div>
 
-          <div class="form-group row-flex">
-            <div>
-              <label class="form-label" for="m-branch">Branch</label>
-              <input type="text" class="form-control" id="m-branch" required placeholder="Ex: main" value="main" />
+            <div class="form-group">
+              <label class="form-label" for="m-summary">Linha Fina (Resumo)</label>
+              <input type="text" class="form-control" id="m-summary" required placeholder="Um breve resumo que aparece no feed" />
             </div>
-            <div>
-              <label class="form-label" for="m-author">Autor / Repórter</label>
-              <input type="text" class="form-control" id="m-author" required placeholder="Ex: Redação" value="Redação" />
+
+            <div class="form-group">
+              <label class="form-label" for="m-image-file">Foto de Capa (Upload Direto do Computador)</label>
+              <input type="file" class="form-control" id="m-image-file" accept="image/*" style="padding: 0.5rem;" />
+              <p style="font-size: 0.75rem; color: var(--color-text-light); margin-top: 0.35rem;">Você também pode colar um link de imagem no campo abaixo se preferir.</p>
             </div>
-          </div>
 
-          <div class="form-group">
-            <label class="form-label" for="m-category">Editoria / Categoria</label>
-            <select class="form-control" id="m-category">
-              <option value="Brasil & Política">Brasil & Política</option>
-              <option value="Economia">Economia</option>
-              <option value="Cultura">Cultura</option>
-              <option value="Opinião">Opinião</option>
-            </select>
-          </div>
+            <div class="form-group">
+              <label class="form-label" for="m-image-url">Ou URL da Imagem Externa (Opcional)</label>
+              <input type="text" class="form-control" id="m-image-url" placeholder="Ex: https://images.unsplash.com/photo-..." />
+            </div>
 
-          <div class="form-group">
-            <label class="form-label" for="m-title">Título da Notícia</label>
-            <input type="text" class="form-control" id="m-title" required placeholder="Digite um título impactante" />
-          </div>
+            <div class="form-group">
+              <label class="form-label" for="m-content">Conteúdo da Notícia (Markdown)</label>
+              <textarea class="form-control" id="m-content" required placeholder="Redija a sua matéria aqui utilizando Markdown. Ex:\n\n### Subtítulo\nO texto da notícia **em negrito** ou *itálico*...\n\n> Citação importante." style="min-height: 250px;"></textarea>
+            </div>
 
-          <div class="form-group">
-            <label class="form-label" for="m-summary">Linha Fina (Resumo)</label>
-            <input type="text" class="form-control" id="m-summary" required placeholder="Um breve resumo que aparece no feed" />
-          </div>
+            <div class="form-group">
+              <label class="form-checkbox-label">
+                <input type="checkbox" class="form-checkbox" id="m-featured" />
+                Destacar como Notícia Principal no topo da Home
+              </label>
+            </div>
 
-          <div class="form-group">
-            <label class="form-label" for="m-image">URL da Imagem de Capa (Opcional)</label>
-            <input type="text" class="form-control" id="m-image" placeholder="Ex: https://images.unsplash.com/photo-..." />
-          </div>
+            <button type="submit" class="btn-publish" id="m-submit-btn">
+              Publicar Matéria no Portal
+            </button>
+          </form>
+        </div>
 
-          <div class="form-group">
-            <label class="form-label" for="m-content">Conteúdo da Notícia (Markdown)</label>
-            <textarea class="form-control" id="m-content" required placeholder="Redija a sua matéria aqui utilizando Markdown. Ex:\n\n### Subtítulo\nO text da notícia **em negrito** ou *itálico*...\n\n> Citação importante."></textarea>
-          </div>
-
-          <div class="form-group">
-            <label class="form-checkbox-label">
-              <input type="checkbox" class="form-checkbox" id="m-featured" />
-              Destacar como Notícia Principal no topo da Home
-            </label>
-          </div>
-
-          <button type="submit" class="btn-publish" id="m-submit-btn">
-            Publicar Matéria no GitHub
-          </button>
-        </form>
+        <div class="admin-form-card">
+          <h2 class="admin-form-title" style="font-size: 1.5rem; margin-bottom: 1.5rem;">Gerenciar Matérias Existentes</h2>
+          <div id="manager-list-container"></div>
+        </div>
       </div>
 
-      <div class="admin-form-card">
-        <h2 class="admin-form-title" style="font-size: 1.5rem; margin-bottom: 1.5rem;">Gerenciar Matérias Existentes</h2>
-        <div id="manager-list-container"></div>
-      </div>
-    </div> <!-- Fim da coluna esquerda flex -->
-
-    <!-- Coluna Direita: Preview Visual -->
+      <!-- Coluna Direita: Preview Visual -->
       <div class="admin-preview-column">
         <h3 class="admin-preview-title">
           <span></span> Visualização em Tempo Real (Desktop)
@@ -511,7 +553,7 @@ function renderManager() {
           <article class="article-page" style="box-shadow: none; border: none; padding: 1.5rem; border-radius: 0; min-height: 100%;">
             <header class="article-header">
               <span class="category-badge" id="prev-badge" style="background-color: var(--color-accent-orange)">
-                Brasil & Política
+                Brasil
               </span>
               <h1 class="article-title" id="prev-title" style="font-size: 2.2rem; margin: 0.5rem 0;">
                 Título da Matéria
@@ -537,17 +579,22 @@ function renderManager() {
     </div>
   `;
 
+  // Ouvinte do botão de Logout
+  document.getElementById('btn-logout').addEventListener('click', async () => {
+    if (confirm('Tem certeza que deseja sair do painel administrativo?')) {
+      await supabaseClient.auth.signOut();
+      renderLoginForm();
+    }
+  });
+
   // Elementos do Formulário
   const form = document.getElementById('manager-form');
-  const inToken = document.getElementById('m-token');
-  const inOwner = document.getElementById('m-owner');
-  const inRepo = document.getElementById('m-repo');
-  const inBranch = document.getElementById('m-branch');
   const inAuthor = document.getElementById('m-author');
   const inCategory = document.getElementById('m-category');
   const inTitle = document.getElementById('m-title');
   const inSummary = document.getElementById('m-summary');
-  const inImage = document.getElementById('m-image');
+  const inImageFile = document.getElementById('m-image-file');
+  const inImageUrl = document.getElementById('m-image-url');
   const inContent = document.getElementById('m-content');
   const inFeatured = document.getElementById('m-featured');
   const btnSubmit = document.getElementById('m-submit-btn');
@@ -561,20 +608,8 @@ function renderManager() {
   const prevImage = document.getElementById('prev-image');
   const prevBody = document.getElementById('prev-body');
 
-  // Recupera configurações salvas do localStorage se houverem
-  if (localStorage.getItem('git_token')) inToken.value = localStorage.getItem('git_token');
-  if (localStorage.getItem('git_owner')) inOwner.value = localStorage.getItem('git_owner');
-  if (localStorage.getItem('git_repo')) inRepo.value = localStorage.getItem('git_repo');
-  if (localStorage.getItem('git_branch')) inBranch.value = localStorage.getItem('git_branch');
+  // Recupera configurações de autor persistidas
   if (localStorage.getItem('git_author')) inAuthor.value = localStorage.getItem('git_author');
-
-  // Helpers auxiliares para codificar e decodificar Base64 com suporte a UTF-8 (acentos em PT-BR)
-  function utob(str) {
-    return btoa(unescape(encodeURIComponent(str)));
-  }
-  function btou(str) {
-    return decodeURIComponent(escape(atob(str)));
-  }
 
   // Função para sanitizar títulos em Slugs para URL
   function slugify(text) {
@@ -600,16 +635,18 @@ function renderManager() {
     prevSummary.textContent = inSummary.value || 'Resumo da notícia que você está redigindo aparecerá aqui.';
     prevAuthor.textContent = inAuthor.value || 'Redação';
     
-    // Atualiza categoria e cor
     const category = inCategory.value;
     prevBadge.textContent = category;
     prevBadge.style.backgroundColor = getCategoryColor(category);
 
-    // Imagem de capa
     const defaultImg = 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=1200&q=80';
-    prevImage.src = inImage.value || defaultImg;
+    
+    if (inImageFile.files && inImageFile.files[0]) {
+      prevImage.src = URL.createObjectURL(inImageFile.files[0]);
+    } else {
+      prevImage.src = inImageUrl.value || defaultImg;
+    }
 
-    // Conteúdo em Markdown
     const markdownText = inContent.value;
     if (markdownText) {
       if (typeof marked !== 'undefined' && marked.parse) {
@@ -622,195 +659,125 @@ function renderManager() {
     }
   }
 
-  // Registra os escutadores para o preview em tempo real
+  // Ouvintes de alteração para Preview
   inTitle.addEventListener('input', updatePreview);
   inSummary.addEventListener('input', updatePreview);
   inAuthor.addEventListener('input', updatePreview);
   inCategory.addEventListener('change', updatePreview);
-  inImage.addEventListener('input', updatePreview);
+  inImageUrl.addEventListener('input', updatePreview);
   inContent.addEventListener('input', updatePreview);
+  inImageFile.addEventListener('change', updatePreview);
 
-  // Submissão do Formulário de Publicação via REST API do GitHub
+  // Submissão do Formulário de Publicação via Supabase
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     
     alertContainer.innerHTML = '';
     btnSubmit.disabled = true;
-    btnSubmit.textContent = 'Autenticando e Indexando...';
+    btnSubmit.textContent = 'Enviando dados...';
 
-    // Parâmetros de Configuração do GitHub
-    const token = inToken.value.trim();
-    const owner = inOwner.value.trim();
-    const repo = inRepo.value.trim();
-    const branch = inBranch.value.trim();
     const author = inAuthor.value.trim();
     const category = inCategory.value;
     const title = inTitle.value.trim();
     const summary = inSummary.value.trim();
-    const image = inImage.value.trim();
     const content = inContent.value;
     const featured = inFeatured.checked;
-
-    const headers = {
-      'Authorization': `token ${token}`,
-      'Accept': 'application/vnd.github.v3+json',
-      'Content-Type': 'application/json'
-    };
+    const slug = slugify(title);
 
     try {
-      // Passo 1: Buscar o index.json existente do repositório para ler o conteúdo atual e o SHA
-      btnSubmit.textContent = 'Buscando índice de notícias atual...';
-      const indexUrl = `https://api.github.com/repos/${owner}/${repo}/contents/noticias/index.json?ref=${branch}`;
+      let finalImageUrl = inImageUrl.value.trim();
       
-      let indexSha = null;
-      let noticiasList = [];
+      // 1. Processar Upload de Foto para o Supabase Storage se houver arquivo local selecionado
+      if (inImageFile.files && inImageFile.files[0]) {
+        btnSubmit.textContent = 'Fazendo upload da imagem...';
+        const file = inImageFile.files[0];
+        const fileExt = file.name.split('.').pop();
+        const uniqueFileName = `${slug}-${Date.now()}.${fileExt}`;
+        
+        const { error: uploadError } = await supabaseClient.storage
+          .from('imagens-noticias')
+          .upload(uniqueFileName, file);
 
-      const indexResponse = await fetch(indexUrl, { headers });
-      
-      if (indexResponse.ok) {
-        const indexData = await indexResponse.json();
-        indexSha = indexData.sha;
-        const decodedContent = btou(indexData.content.replace(/\s/g, ''));
-        noticiasList = JSON.parse(decodedContent);
-      } else if (indexResponse.status !== 404) {
-        throw new Error(`Falha ao ler o index.json do GitHub. Código HTTP: ${indexResponse.status}`);
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabaseClient.storage
+          .from('imagens-noticias')
+          .getPublicUrl(uniqueFileName);
+          
+        finalImageUrl = publicUrl;
       }
 
-      // Passo 2: Preparar a nova matéria e o novo index.json
-      btnSubmit.textContent = 'Preparando arquivos da matéria...';
-      const slug = slugify(title);
-      const dateNow = new Date().toISOString().split('T')[0];
-      const fileName = `${dateNow}-${slug}.md`;
-      const fileUrl = `https://api.github.com/repos/${owner}/${repo}/contents/noticias/${fileName}`;
-      
-      // Formatação da data ISO local simples
-      const isoDate = new Date().toISOString().replace(/\.\d+Z$/, '-03:00');
-      const imageUrl = image || 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=1200&q=80';
-
-      const mdContent = `---
-id: "${slug}"
-title: "${title}"
-summary: "${summary}"
-category: "${category}"
-date: "${isoDate}"
-author: "${author}"
-image: "${imageUrl}"
-featured: ${featured ? 'true' : 'false'}
----
-
-${content}`;
-
-      // Monta metadados da nova notícia no topo do feed
-      const newArticleMeta = {
-        id: slug,
-        title: title,
-        summary: summary,
-        category: category,
-        date: isoDate,
-        author: author,
-        image: imageUrl,
-        featured: featured,
-        fileName: fileName
-      };
-
-      // Adiciona no início da lista e reordena
-      noticiasList.unshift(newArticleMeta);
-      noticiasList.sort((a, b) => new Date(b.date) - new Date(a.date));
-      const updatedJsonString = JSON.stringify(noticiasList, null, 2);
-
-      // Passo 3: Enviar o arquivo .md da notícia para o repositório
-      btnSubmit.textContent = 'Enviando arquivo Markdown (.md)...';
-      const mdPayload = {
-        message: `Publicar noticia: ${title}`,
-        content: utob(mdContent),
-        branch: branch
-      };
-
-      const mdResponse = await fetch(fileUrl, {
-        method: 'PUT',
-        headers: headers,
-        body: JSON.stringify(mdPayload)
-      });
-
-      if (!mdResponse.ok) {
-        const errData = await mdResponse.json();
-        throw new Error(`Erro ao enviar arquivo .md: ${errData.message || mdResponse.statusText}`);
+      if (!finalImageUrl) {
+        finalImageUrl = 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=1200&q=80';
       }
 
-      // Passo 4: Enviar o index.json atualizado para o repositório
-      btnSubmit.textContent = 'Atualizando o índice de notícias...';
-      const jsonPayload = {
-        message: 'Atualizar indice de noticias',
-        content: utob(updatedJsonString),
-        branch: branch
-      };
-      
-      // Se o arquivo index.json já existia no GitHub, precisamos enviar o SHA para o Git aceitar o update
-      if (indexSha) {
-        jsonPayload.sha = indexSha;
+      btnSubmit.textContent = 'Salvando no banco de dados...';
+
+      if (featured) {
+        await supabaseClient
+          .from('noticias')
+          .update({ featured: false })
+          .eq('featured', true);
       }
 
-      const jsonResponse = await fetch(indexUrl, {
-        method: 'PUT',
-        headers: headers,
-        body: JSON.stringify(jsonPayload)
-      });
+      // 2. Inserir a nova notícia na tabela `noticias` do Supabase
+      const { error: insertError } = await supabaseClient
+        .from('noticias')
+        .insert([{
+          slug,
+          title,
+          summary,
+          category,
+          author,
+          image: finalImageUrl,
+          content,
+          featured
+        }]);
 
-      if (!jsonResponse.ok) {
-        const errData = await jsonResponse.json();
-        throw new Error(`Erro ao atualizar index.json: ${errData.message || jsonResponse.statusText}`);
-      }
+      if (insertError) throw insertError;
 
-      // Sucesso na publicação
       alertContainer.innerHTML = `
         <div class="alert alert-success">
-          ✅ Matéria publicada e comitada no GitHub! A Vercel reconstruirá o site em aproximadamente 30 segundos.
+          ✅ Matéria publicada e disponível no portal instantaneamente!
         </div>
       `;
 
-      // Persiste as configurações no localStorage para facilitar futuros posts
-      localStorage.setItem('git_token', token);
-      localStorage.setItem('git_owner', owner);
-      localStorage.setItem('git_repo', repo);
-      localStorage.setItem('git_branch', branch);
       localStorage.setItem('git_author', author);
 
-      // Limpa os campos do formulário de conteúdo
       inTitle.value = '';
       inSummary.value = '';
-      inImage.value = '';
+      inImageUrl.value = '';
+      inImageFile.value = '';
       inContent.value = '';
       inFeatured.checked = false;
       
       updatePreview();
       
-      // Atualiza o estado das notícias em memória local do navegador para exibição imediata
-      state.noticias = noticiasList;
+      await loadNoticiasIndex();
       renderManagerArticlesList();
 
-      // Rola o painel do formulário para o topo para ver o alerta de sucesso
       window.scrollTo({ top: 0, behavior: 'smooth' });
 
     } catch (error) {
-      console.error('Erro na integração com GitHub API:', error);
+      console.error('Erro ao salvar notícia no Supabase:', error);
       alertContainer.innerHTML = `
         <div class="alert alert-error">
-          ❌ Erro ao Publicar: ${error.message || 'Falha de comunicação com a API do GitHub.'}
+          ❌ Erro ao Publicar: ${error.message || 'Falha de comunicação com o Supabase.'}
         </div>
       `;
     } finally {
       btnSubmit.disabled = false;
-      btnSubmit.textContent = 'Publicar Matéria no GitHub';
+      btnSubmit.textContent = 'Publicar Matéria no Portal';
     }
   });
 
-  // Função para renderizar a lista de notícias publicadas no painel
+  // Renderiza a lista de notícias publicadas no banco para gerenciamento
   function renderManagerArticlesList() {
     const listContainer = document.getElementById('manager-list-container');
     if (!listContainer) return;
     
     if (state.noticias.length === 0) {
-      listContainer.innerHTML = '<p style="color: var(--color-text-light);">Nenhuma notícia publicada ainda.</p>';
+      listContainer.innerHTML = '<p style="color: var(--color-text-light);">Nenhuma notícia publicada no banco de dados.</p>';
       return;
     }
     
@@ -822,7 +789,7 @@ ${content}`;
               <strong style="display: block; font-family: var(--font-headings); font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${noticia.title}</strong>
               <span style="font-size: 0.8rem; color: var(--color-text-light);">${noticia.category} &bull; ${formatFriendlyDate(noticia.date)}</span>
             </div>
-            <button class="btn-delete-article" data-id="${noticia.id}" data-filename="${noticia.fileName}" data-title="${noticia.title}" style="background-color: #e74c3c; color: white; border: none; padding: 0.4rem 0.8rem; border-radius: 4px; font-size: 0.8rem; cursor: pointer; font-weight: bold; transition: background-color 0.2s;">
+            <button class="btn-delete-article" data-id="${noticia.id}" data-title="${noticia.title}" style="background-color: #e74c3c; color: white; border: none; padding: 0.4rem 0.8rem; border-radius: 4px; font-size: 0.8rem; cursor: pointer; font-weight: bold; transition: background-color 0.2s;">
               Excluir
             </button>
           </li>
@@ -830,140 +797,49 @@ ${content}`;
       </ul>
     `;
     
-    // Adiciona event listeners para os botões de exclusão
     const deleteButtons = listContainer.querySelectorAll('.btn-delete-article');
     deleteButtons.forEach(btn => {
       btn.addEventListener('click', async (e) => {
         const id = btn.getAttribute('data-id');
-        const fileName = btn.getAttribute('data-filename');
         const title = btn.getAttribute('data-title');
         
-        const token = inToken.value.trim();
-        const owner = inOwner.value.trim();
-        const repo = inRepo.value.trim();
-        const branch = inBranch.value.trim();
-        
-        if (!token || !owner || !repo) {
-          alert('Por favor, preencha o Token, Usuário e Repositório no formulário acima para poder excluir matérias.');
-          inToken.focus();
-          return;
-        }
-        
-        if (confirm(`Tem certeza que deseja excluir permanentemente a notícia "${title}"?`)) {
-          await deleteArticle(id, fileName, title, token, owner, repo, branch, btn);
+        if (confirm(`Tem certeza que deseja excluir permanentemente a notícia "${title}" do banco de dados?`)) {
+          const originalText = btn.textContent;
+          btn.disabled = true;
+          btn.textContent = 'Excluindo...';
+          
+          try {
+            const { error: deleteError } = await supabaseClient
+              .from('noticias')
+              .delete()
+              .eq('id', id);
+
+            if (deleteError) throw deleteError;
+
+            await loadNoticiasIndex();
+            renderManagerArticlesList();
+
+            alertContainer.innerHTML = `
+              <div class="alert alert-success">
+                ✅ Matéria "${title}" excluída com sucesso!
+              </div>
+            `;
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+
+          } catch (error) {
+            console.error('Erro ao deletar matéria:', error);
+            alert(`Erro ao Excluir: ${error.message || 'Falha de comunicação com o Supabase.'}`);
+            btn.disabled = false;
+            btn.textContent = originalText;
+          }
         }
       });
     });
   }
 
-  // Função para deletar a matéria via API do GitHub
-  async function deleteArticle(id, fileName, title, token, owner, repo, branch, btnElement) {
-    const originalText = btnElement.textContent;
-    btnElement.disabled = true;
-    btnElement.textContent = 'Excluindo...';
-    
-    const headers = {
-      'Authorization': `token ${token}`,
-      'Accept': 'application/vnd.github.v3+json',
-      'Content-Type': 'application/json'
-    };
-    
-    try {
-      // 1. Buscar o SHA do arquivo Markdown da notícia no GitHub
-      const fileUrl = `https://api.github.com/repos/${owner}/${repo}/contents/noticias/${fileName}?ref=${branch}`;
-      const fileResponse = await fetch(fileUrl, { headers });
-      
-      let fileSha = null;
-      if (fileResponse.ok) {
-        const fileData = await fileResponse.json();
-        fileSha = fileData.sha;
-      } else if (fileResponse.status !== 404) {
-        throw new Error(`Falha ao obter dados do arquivo da notícia. Status: ${fileResponse.status}`);
-      }
-      
-      // 2. Se o arquivo existe no GitHub, deletar o arquivo .md
-      if (fileSha) {
-        const deleteUrl = `https://api.github.com/repos/${owner}/${repo}/contents/noticias/${fileName}`;
-        const deletePayload = {
-          message: `Excluir noticia: ${title}`,
-          sha: fileSha,
-          branch: branch
-        };
-        
-        const deleteResponse = await fetch(deleteUrl, {
-          method: 'DELETE',
-          headers: headers,
-          body: JSON.stringify(deletePayload)
-        });
-        
-        if (!deleteResponse.ok) {
-          const errData = await deleteResponse.json();
-          throw new Error(`Erro ao deletar o arquivo .md no GitHub: ${errData.message || deleteResponse.statusText}`);
-        }
-      }
-      
-      // 3. Buscar o index.json para obter o SHA atualizado do índice
-      const indexUrl = `https://api.github.com/repos/${owner}/${repo}/contents/noticias/index.json?ref=${branch}`;
-      const indexResponse = await fetch(indexUrl, { headers });
-      
-      let indexSha = null;
-      let noticiasList = [];
-      
-      if (indexResponse.ok) {
-        const indexData = await indexResponse.json();
-        indexSha = indexData.sha;
-        const decodedContent = btou(indexData.content.replace(/\s/g, ''));
-        noticiasList = JSON.parse(decodedContent);
-      } else {
-        throw new Error(`Falha ao ler o index.json do GitHub. Status: ${indexResponse.status}`);
-      }
-      
-      // 4. Remover a notícia do array e atualizar o index.json
-      noticiasList = noticiasList.filter(n => n.id !== id);
-      const updatedJsonString = JSON.stringify(noticiasList, null, 2);
-      
-      const jsonPayload = {
-        message: `Excluir noticia do index: ${title}`,
-        content: utob(updatedJsonString),
-        branch: branch,
-        sha: indexSha
-      };
-      
-      const jsonResponse = await fetch(indexUrl, {
-        method: 'PUT',
-        headers: headers,
-        body: JSON.stringify(jsonPayload)
-      });
-      
-      if (!jsonResponse.ok) {
-        const errData = await jsonResponse.json();
-        throw new Error(`Erro ao atualizar index.json no GitHub: ${errData.message || jsonResponse.statusText}`);
-      }
-      
-      // 5. Atualizar o estado local e re-renderizar a lista no painel
-      state.noticias = noticiasList;
-      renderManagerArticlesList();
-      
-      alertContainer.innerHTML = `
-        <div class="alert alert-success">
-          ✅ Matéria "${title}" excluída com sucesso! A Vercel atualizará o site em alguns segundos.
-        </div>
-      `;
-      
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      
-    } catch (error) {
-      console.error('Erro ao deletar matéria:', error);
-      alert(`Erro ao Excluir: ${error.message || 'Falha de comunicação com o GitHub.'}`);
-      btnElement.disabled = false;
-      btnElement.textContent = originalText;
-    }
-  }
-
-  // Atualiza o preview e a lista inicialmente
   updatePreview();
   renderManagerArticlesList();
 }
 
-// Executa a inicialização diretamente (módulos ES já rodam com o DOM pronto)
+// Inicializa o app
 init();

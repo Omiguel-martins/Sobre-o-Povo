@@ -381,13 +381,13 @@ img {
 .featured-img-container {
   position: relative;
   overflow: hidden;
-  aspect-ratio: 16 / 9;
+  height: auto;
 }
 
 .featured-img-container img {
   width: 100%;
-  height: 100%;
-  object-fit: cover;
+  height: auto;
+  display: block;
   transition: var(--transition-smooth);
 }
 
@@ -543,13 +543,13 @@ img {
 .news-img-container {
   position: relative;
   overflow: hidden;
-  aspect-ratio: 16 / 10;
+  height: auto;
 }
 
 .news-img-container img {
   width: 100%;
-  height: 100%;
-  object-fit: cover;
+  height: auto;
+  display: block;
   transition: var(--transition-smooth);
 }
 
@@ -760,11 +760,12 @@ img {
 }
 
 .article-hero-img {
-  width: 100%;
-  aspect-ratio: 16 / 9;
-  object-fit: cover;
+  display: block;
+  max-width: 100%;
+  height: auto;
+  max-height: 550px;
+  margin: 0 auto 2.5rem;
   border-radius: var(--radius-md);
-  margin-bottom: 2.5rem;
   box-shadow: 0 8px 24px rgba(0,0,0,0.1);
 }
 

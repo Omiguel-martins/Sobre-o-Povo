@@ -276,7 +276,7 @@ function renderLatestSidebarItem(noticia) {
         <span class="latest-time">${formatFriendlyDate(noticia.date)}</span>
       </div>
       <a href="#/noticia/${noticia.slug}">
-        <h4 class="latest-title">${noticia.slug}</h4>
+        <h4 class="latest-title">${noticia.title}</h4>
       </a>
     </div>
   `;
@@ -325,11 +325,24 @@ async function renderArticle(slug) {
       return;
     }
 
-    let bodyHtml = '';
-    if (typeof marked !== 'undefined' && marked.parse) {
+    // Se o conteúdo começar com tag HTML, assumimos que é rich text, senão tentamos Markdown como fallback
+    let bodyHtml = meta.content;
+    const isHtml = /<[a-z][\s\S]*>/i.test(meta.content);
+    if (!isHtml && typeof marked !== 'undefined' && marked.parse) {
       bodyHtml = marked.parse(meta.content);
-    } else {
+    } else if (!isHtml) {
       bodyHtml = `<p>${meta.content.replace(/\n\n/g, '</p><p>')}</p>`;
+    }
+
+    // Estrutura de exibição dos créditos no rodapé da página
+    let creditsHtml = '';
+    if (meta.credits) {
+      creditsHtml = `
+        <footer class="article-credits-box">
+          <div class="article-credits-title">Envolvidos e Ficha Técnica</div>
+          <p>${meta.credits.replace(/\n/g, '<br>')}</p>
+        </footer>
+      `;
     }
 
     mainContent.innerHTML = `
@@ -356,6 +369,8 @@ async function renderArticle(slug) {
         <div class="article-body">
           ${bodyHtml}
         </div>
+        
+        ${creditsHtml}
       </article>
     `;
   } catch (error) {
@@ -468,9 +483,33 @@ function renderLoginForm() {
 // Exibe o painel administrativo completo para o usuário autenticado
 function renderAdminDashboard(user) {
   mainContent.innerHTML = `
+    <!-- Menu Flutuante de Formatação de Texto Rico -->
+    <div class="floating-toolbar" id="floating-toolbar">
+      <button type="button" id="btn-bold" title="Negrito"><b>B</b></button>
+      <button type="button" id="btn-italic" title="Itálico"><i>I</i></button>
+      <button type="button" id="btn-underline" title="Sublinhado"><u>U</u></button>
+      <div class="divider"></div>
+      <button type="button" id="btn-h3" title="Subtítulo">H3</button>
+      <button type="button" id="btn-ul" title="Lista Comum">• Lista</button>
+      <div class="divider"></div>
+      <button type="button" id="btn-link" title="Inserir Link">🔗 Link</button>
+    </div>
+
     <div class="admin-panel-container">
       <!-- Coluna Esquerda: Formulário e Lista de Matérias -->
       <div style="display: flex; flex-direction: column; gap: 2rem;">
+        
+        <!-- Breve Tutorial de Publicação -->
+        <div class="tutorial-card">
+          <div class="tutorial-title">📖 Como Publicar Matérias no Novo Painel</div>
+          <ol class="tutorial-list">
+            <li>Insira as informações básicas (Autor, Editoria, Título e Resumo).</li>
+            <li>No campo **Corpo da Matéria**, digite o texto livremente como no Word ou Notion.</li>
+            <li>**Para formatar o texto:** Use o mouse ou teclado para selecionar qualquer palavra ou trecho do texto. Um menu flutuante aparecerá na hora com opções de **Negrito, Itálico, Sublinhado, Subtítulo, Listas e Links**!</li>
+            <li>Escolha se deseja colocar créditos no rodapé e clique em **Publicar Matéria**.</li>
+          </ol>
+        </div>
+
         <div class="admin-form-card">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; border-bottom: 1px solid var(--color-border); padding-bottom: 1rem;">
             <h2 class="admin-form-title" style="margin: 0;">Painel de Publicação (Supabase)</h2>
@@ -510,7 +549,7 @@ function renderAdminDashboard(user) {
             </div>
 
             <div class="form-group">
-              <label class="form-label" for="m-image-file">Foto de Capa (Upload Direto do Computador)</label>
+              <label class="form-label" for="m-image-file">Foto de Capa (Upload Direto do Computador - Opcional)</label>
               <input type="file" class="form-control" id="m-image-file" accept="image/*" style="padding: 0.5rem;" />
               <p style="font-size: 0.75rem; color: var(--color-text-light); margin-top: 0.35rem;">Você também pode colar um link de imagem no campo abaixo se preferir.</p>
             </div>
@@ -520,9 +559,24 @@ function renderAdminDashboard(user) {
               <input type="text" class="form-control" id="m-image-url" placeholder="Ex: https://images.unsplash.com/photo-..." />
             </div>
 
+            <div class="form-group" style="position: relative;">
+              <label class="form-label" for="m-content">Corpo da Matéria (Escreva e selecione palavras para formatar)</label>
+              <div contenteditable="true" class="rich-text-editor" id="m-content" placeholder="Escreva o corpo da notícia aqui..."></div>
+            </div>
+
+            <!-- Área de Escolha de Créditos -->
             <div class="form-group">
-              <label class="form-label" for="m-content">Conteúdo da Notícia (Markdown)</label>
-              <textarea class="form-control" id="m-content" required placeholder="Redija a sua matéria aqui utilizando Markdown. Ex:\n\n### Subtítulo\nO texto da notícia **em negrito** ou *itálico*...\n\n> Citação importante." style="min-height: 250px;"></textarea>
+              <label class="form-label">Deseja exibir área de créditos no rodapé da matéria?</label>
+              <div class="credits-toggle-container">
+                <button type="button" class="btn-toggle-option" id="btn-credits-no">Não</button>
+                <button type="button" class="btn-toggle-option" id="btn-credits-yes">Sim</button>
+              </div>
+            </div>
+
+            <!-- Campo de Créditos Oculto por padrão -->
+            <div class="form-group" id="credits-input-group" style="display: none;">
+              <label class="form-label" for="m-credits">Ficha Técnica e Créditos (Envolvidos, links, perfis do Instagram...)</label>
+              <textarea class="form-control" id="m-credits" placeholder="Ex:\nReportagem: João Silva (@joaosilva)\nFotos: Maria Souza\nSaiba mais em: link-da-fonte.com" style="min-height: 100px;"></textarea>
             </div>
 
             <div class="form-group">
@@ -573,6 +627,11 @@ function renderAdminDashboard(user) {
             <div class="article-body" id="prev-body">
               <p>O corpo da notícia redigido no editor aparecerá formatado aqui em tempo real.</p>
             </div>
+            
+            <footer class="article-credits-box" id="prev-credits-box" style="display: none; margin-top: 2rem;">
+              <div class="article-credits-title">Envolvidos e Ficha Técnica</div>
+              <p id="prev-credits-content"></p>
+            </footer>
           </article>
         </div>
       </div>
@@ -597,8 +656,35 @@ function renderAdminDashboard(user) {
   const inImageUrl = document.getElementById('m-image-url');
   const inContent = document.getElementById('m-content');
   const inFeatured = document.getElementById('m-featured');
+  const inCredits = document.getElementById('m-credits');
   const btnSubmit = document.getElementById('m-submit-btn');
   const alertContainer = document.getElementById('manager-alert-container');
+
+  // Elementos de Créditos
+  const btnCreditsYes = document.getElementById('btn-credits-yes');
+  const btnCreditsNo = document.getElementById('btn-credits-no');
+  const creditsInputGroup = document.getElementById('credits-input-group');
+  let hasCredits = false;
+
+  // Define padrão do botão de créditos
+  btnCreditsNo.classList.add('active');
+
+  btnCreditsYes.addEventListener('click', () => {
+    hasCredits = true;
+    btnCreditsYes.classList.add('active');
+    btnCreditsNo.classList.remove('active');
+    creditsInputGroup.style.display = 'block';
+    updatePreview();
+  });
+
+  btnCreditsNo.addEventListener('click', () => {
+    hasCredits = false;
+    btnCreditsNo.classList.add('active');
+    btnCreditsYes.classList.remove('active');
+    creditsInputGroup.style.display = 'none';
+    inCredits.value = '';
+    updatePreview();
+  });
 
   // Elementos do Preview
   const prevBadge = document.getElementById('prev-badge');
@@ -607,9 +693,59 @@ function renderAdminDashboard(user) {
   const prevAuthor = document.getElementById('prev-author');
   const prevImage = document.getElementById('prev-image');
   const prevBody = document.getElementById('prev-body');
+  const prevCreditsBox = document.getElementById('prev-credits-box');
+  const prevCreditsContent = document.getElementById('prev-credits-content');
 
-  // Recupera configurações de autor persistidas
+  // Recupera autor persistido
   if (localStorage.getItem('git_author')) inAuthor.value = localStorage.getItem('git_author');
+
+  // Logic do Menu Flutuante de Formatação (Estilo Medium/Notion)
+  const toolbar = document.getElementById('floating-toolbar');
+  
+  function checkTextSelection() {
+    const selection = window.getSelection();
+    
+    // Mostra a barra flutuante apenas se houver texto selecionado dentro do editor de texto rico
+    if (!selection.isCollapsed && selection.toString().trim().length > 0 && inContent.contains(selection.anchorNode)) {
+      const range = selection.getRangeAt(0);
+      const rect = range.getBoundingClientRect();
+      
+      toolbar.style.display = 'flex';
+      // Ajusta posicionamento acima da seleção do texto
+      toolbar.style.top = `${rect.top + window.scrollY - toolbar.offsetHeight - 8}px`;
+      toolbar.style.left = `${rect.left + window.scrollX + (rect.width / 2) - (toolbar.offsetWidth / 2)}px`;
+    } else {
+      toolbar.style.display = 'none';
+    }
+  }
+
+  // Verifica a seleção ao mexer o mouse ou soltar teclas no editor
+  document.addEventListener('selectionchange', checkTextSelection);
+  window.addEventListener('resize', () => toolbar.style.display = 'none');
+
+  // Comandos de formatação ricos (Importante: mousedown com preventDefault evita a perda do foco no texto)
+  function registerFormatCommand(btnId, command, arg = null) {
+    document.getElementById(btnId).addEventListener('mousedown', (e) => {
+      e.preventDefault();
+      document.execCommand(command, false, arg);
+      updatePreview();
+    });
+  }
+
+  registerFormatCommand('btn-bold', 'bold');
+  registerFormatCommand('btn-italic', 'italic');
+  registerFormatCommand('btn-underline', 'underline');
+  registerFormatCommand('btn-h3', 'formatBlock', '<h3>');
+  registerFormatCommand('btn-ul', 'insertUnorderedList');
+
+  document.getElementById('btn-link').addEventListener('mousedown', (e) => {
+    e.preventDefault();
+    const url = prompt('Digite a URL do link (ex: https://...):');
+    if (url) {
+      document.execCommand('createLink', false, url);
+      updatePreview();
+    }
+  });
 
   // Função para sanitizar títulos em Slugs para URL
   function slugify(text) {
@@ -647,15 +783,20 @@ function renderAdminDashboard(user) {
       prevImage.src = inImageUrl.value || defaultImg;
     }
 
-    const markdownText = inContent.value;
-    if (markdownText) {
-      if (typeof marked !== 'undefined' && marked.parse) {
-        prevBody.innerHTML = marked.parse(markdownText);
-      } else {
-        prevBody.innerHTML = `<p>${markdownText.replace(/\n\n/g, '</p><p>')}</p>`;
-      }
+    // Renderiza o HTML gerado pelo editor de texto rico no corpo do preview
+    const richTextHtml = inContent.innerHTML.trim();
+    if (richTextHtml && richTextHtml !== '<br>') {
+      prevBody.innerHTML = richTextHtml;
     } else {
       prevBody.innerHTML = '<p>O corpo da notícia redigido no editor aparecerá formatado aqui em tempo real.</p>';
+    }
+
+    // Preview dos créditos
+    if (hasCredits && inCredits.value.trim()) {
+      prevCreditsBox.style.display = 'block';
+      prevCreditsContent.innerHTML = inCredits.value.trim().replace(/\n/g, '<br>');
+    } else {
+      prevCreditsBox.style.display = 'none';
     }
   }
 
@@ -666,7 +807,9 @@ function renderAdminDashboard(user) {
   inCategory.addEventListener('change', updatePreview);
   inImageUrl.addEventListener('input', updatePreview);
   inContent.addEventListener('input', updatePreview);
+  inContent.addEventListener('blur', updatePreview);
   inImageFile.addEventListener('change', updatePreview);
+  inCredits.addEventListener('input', updatePreview);
 
   // Submissão do Formulário de Publicação via Supabase
   form.addEventListener('submit', async (e) => {
@@ -680,9 +823,17 @@ function renderAdminDashboard(user) {
     const category = inCategory.value;
     const title = inTitle.value.trim();
     const summary = inSummary.value.trim();
-    const content = inContent.value;
+    const contentHtml = inContent.innerHTML.trim(); // Pega a marcação HTML do editor
     const featured = inFeatured.checked;
     const slug = slugify(title);
+    const credits = hasCredits ? inCredits.value.trim() : null;
+
+    if (!contentHtml || contentHtml === '<br>') {
+      alert('Por favor, escreva o conteúdo do corpo da matéria.');
+      btnSubmit.disabled = false;
+      btnSubmit.textContent = 'Publicar Matéria no Portal';
+      return;
+    }
 
     try {
       let finalImageUrl = inImageUrl.value.trim();
@@ -730,8 +881,9 @@ function renderAdminDashboard(user) {
           category,
           author,
           image: finalImageUrl,
-          content,
-          featured
+          content: contentHtml, // Salva o HTML estruturado do texto
+          featured,
+          credits: credits // Salva a ficha técnica dos envolvidos
         }]);
 
       if (insertError) throw insertError;
@@ -744,12 +896,15 @@ function renderAdminDashboard(user) {
 
       localStorage.setItem('git_author', author);
 
+      // Limpa os campos
       inTitle.value = '';
       inSummary.value = '';
       inImageUrl.value = '';
       inImageFile.value = '';
-      inContent.value = '';
+      inContent.innerHTML = '';
       inFeatured.checked = false;
+      inCredits.value = '';
+      btnCreditsNo.click(); // Volta a opção de créditos para não
       
       updatePreview();
       

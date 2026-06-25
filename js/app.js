@@ -207,57 +207,78 @@ function renderHome() {
     // 3. A Notícia Principal é a mais recente de hoje (ou a marcada como destaque se houver uma de hoje com destaque)
     const featured = todayNoticias.find(n => n.featured) || todayNoticias[0];
     
-    // 4. Outras notícias de hoje vão para a barra lateral
+    // 4. Outras notícias de hoje vão para o grid de destaque da direita
     const otherTodayNoticias = todayNoticias.filter(n => n.id !== featured.id);
 
-    // Se houver poucas notícias de hoje para preencher a barra lateral, completamos com as mais recentes anteriores
-    let sidebarItems = [...otherTodayNoticias];
-    if (sidebarItems.length < 3) {
-      const fillCount = 3 - sidebarItems.length;
+    // Precisamos de mais 2 cards para preencher o grid de destaque (ao todo 3 no topo)
+    let rightCards = [...otherTodayNoticias];
+    if (rightCards.length < 2) {
+      const fillCount = 2 - rightCards.length;
       const fillItems = olderNoticias.slice(0, fillCount);
-      sidebarItems = [...sidebarItems, ...fillItems];
+      rightCards = [...rightCards, ...fillItems];
     }
 
-    // As notícias restantes (que não são a principal nem estão na barra lateral) vão para o grid "Leia Mais"
-    const sidebarIds = new Set(sidebarItems.map(n => n.id));
-    const gridItems = olderNoticias.filter(n => !sidebarIds.has(n.id) && n.id !== featured.id);
+    const card2 = rightCards[0];
+    const card3 = rightCards[1];
 
-    // Título da barra lateral: Dinâmico conforme a presença de outras notícias de hoje
-    const options = { day: 'numeric', month: 'long' };
-    const formattedTodayDate = latestArticleDate.toLocaleDateString('pt-BR', options);
-    const sidebarTitle = otherTodayNoticias.length > 0 
-      ? `Neste Dia (${formattedTodayDate})` 
-      : 'Últimas Notícias';
+    // As notícias restantes (que não estão no topo) vão para o grid "Leia Mais"
+    const topIds = new Set([featured.id, card2?.id, card3?.id].filter(Boolean));
+    const gridItems = filteredNoticias.filter(n => !topIds.has(n.id));
+
+    // Monta os marcadores adicionais para a matéria principal da esquerda
+    let bulletsHtml = '';
+    if (card2) {
+      bulletsHtml += `<li><a href="#/noticia/${card2.slug}">${card2.title}</a></li>`;
+    }
+    if (card3) {
+      bulletsHtml += `<li><a href="#/noticia/${card3.slug}">${card3.title}</a></li>`;
+    }
 
     htmlContent += `
       <div class="home-grid">
-        <!-- Lado Esquerdo: Notícia Principal do Dia -->
-        <article class="featured-card">
-          <a href="#/noticia/${featured.slug}" class="featured-img-container">
-            <img src="${featured.image}" alt="${featured.title}" loading="lazy" />
-          </a>
-          <div class="featured-card-content">
-            <span class="category-badge" style="background-color: ${getCategoryColor(featured.category)}">
+        <!-- Card Grande da Esquerda (Destaque Principal) -->
+        <a href="#/noticia/${featured.slug}" class="home-card card-large">
+          <div class="card-bg-image" style="background-image: url('${featured.image}')"></div>
+          <div class="card-overlay"></div>
+          <div class="card-content">
+            <span class="card-category" style="color: ${getCategoryColor(featured.category)}">
               ${featured.category}
             </span>
-            <a href="#/noticia/${featured.slug}">
-              <h2 class="featured-title">${featured.title}</h2>
-            </a>
-            <p class="featured-summary">${featured.summary}</p>
-            <div class="meta-info">
-              <span class="meta-author">Por ${featured.author}</span>
-              <span class="meta-date">${formatFriendlyDate(featured.date)}</span>
-            </div>
+            <h2 class="card-title">${featured.title}</h2>
+            <p class="card-summary">${featured.summary}</p>
+            ${bulletsHtml ? `<ul class="card-bullets">${bulletsHtml}</ul>` : ''}
           </div>
-        </article>
+        </a>
 
-        <!-- Lado Direito: Outras Notícias / Barra Lateral -->
-        <aside class="sidebar-section">
-          <h3 class="section-title">${sidebarTitle}</h3>
-          <div class="latest-list">
-            ${sidebarItems.map(renderLatestSidebarItem).join('')}
-          </div>
-        </aside>
+        <!-- Coluna da Direita (Dois Cards Menores) -->
+        <div class="home-grid-right">
+          ${card2 ? `
+            <a href="#/noticia/${card2.slug}" class="home-card card-small">
+              <div class="card-bg-image" style="background-image: url('${card2.image}')"></div>
+              <div class="card-overlay"></div>
+              <div class="card-content">
+                <span class="card-category" style="color: ${getCategoryColor(card2.category)}">
+                  ${card2.category}
+                </span>
+                <h3 class="card-title">${card2.title}</h3>
+                <p class="card-summary">${card2.summary}</p>
+              </div>
+            </a>
+          ` : ''}
+          ${card3 ? `
+            <a href="#/noticia/${card3.slug}" class="home-card card-small">
+              <div class="card-bg-image" style="background-image: url('${card3.image}')"></div>
+              <div class="card-overlay"></div>
+              <div class="card-content">
+                <span class="card-category" style="color: ${getCategoryColor(card3.category)}">
+                  ${card3.category}
+                </span>
+                <h3 class="card-title">${card3.title}</h3>
+                <p class="card-summary">${card3.summary}</p>
+              </div>
+            </a>
+          ` : ''}
+        </div>
       </div>
     `;
 

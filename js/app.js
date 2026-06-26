@@ -589,8 +589,10 @@ function renderAdminDashboard(user) {
                 <select class="form-control" id="m-category">
                   <option value="Brasil">Brasil</option>
                   <option value="Política">Política</option>
+                  <option value="Cidades">Cidades</option>
                   <option value="Economia">Economia</option>
                   <option value="Cultura">Cultura</option>
+                  <option value="Celebridades">Celebridades</option>
                   <option value="Opinião">Opinião</option>
                 </select>
               </div>

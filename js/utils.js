@@ -94,6 +94,10 @@ export function getCategoryColor(category) {
     case 'política':
     case 'brasil':
       return 'var(--color-category-green)'; // Verde da bandeira
+    case 'cidades':
+      return 'hsl(5, 75%, 52%)'; // Vermelho quente para cidades/cotidiano
+    case 'celebridades':
+      return 'hsl(330, 70%, 50%)'; // Rosa vibrante para celebridades
     case 'opinião':
       return 'var(--color-accent-orange)'; // Laranja do balão de fala
     case 'cultura':

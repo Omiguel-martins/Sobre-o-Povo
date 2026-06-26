@@ -392,6 +392,17 @@ img {
   background-color: #111827; /* Fundo escuro de fallback para legibilidade do texto branco no Light Mode se a foto faltar */
 }
 
+/* Stretched Link to make the entire card clickable safely */
+.stretched-link::after {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 1;
+  content: "";
+}
+
 .card-large {
   min-height: 500px;
 }
@@ -523,6 +534,8 @@ img {
   gap: 0.5rem;
   border-top: 1px solid rgba(255, 255, 255, 0.15);
   padding-top: 0.75rem;
+  position: relative;
+  z-index: 2;
 }
 
 .card-bullets li {

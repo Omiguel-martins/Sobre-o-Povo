@@ -237,18 +237,20 @@ function renderHome() {
     htmlContent += `
       <div class="home-grid">
         <!-- Card Grande da Esquerda (Destaque Principal) -->
-        <a href="#/noticia/${featured.slug}" class="home-card card-large">
+        <div class="home-card card-large">
           <div class="card-bg-image" style="background-image: url('${featured.image}')"></div>
           <div class="card-overlay"></div>
           <div class="card-content">
             <span class="card-category" style="color: ${getCategoryColor(featured.category)}">
               ${featured.category}
             </span>
-            <h2 class="card-title">${featured.title}</h2>
+            <a href="#/noticia/${featured.slug}" class="stretched-link">
+              <h2 class="card-title">${featured.title}</h2>
+            </a>
             <p class="card-summary">${featured.summary}</p>
             ${bulletsHtml ? `<ul class="card-bullets">${bulletsHtml}</ul>` : ''}
           </div>
-        </a>
+        </div>
 
         <!-- Coluna da Direita (Dois Cards Menores) -->
         <div class="home-grid-right">

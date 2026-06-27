@@ -19,6 +19,8 @@ const state = {
 const mainContent = document.getElementById('main-content');
 const searchInput = document.getElementById('search-input');
 const searchForm = document.getElementById('search-form');
+const searchInputCompact = document.getElementById('search-input-compact');
+const searchFormCompact = document.getElementById('search-form-compact');
 const themeToggleBtn = document.getElementById('theme-toggle');
 const navLinks = document.querySelectorAll('.nav-link');
 
@@ -68,19 +70,47 @@ function setupEventListeners() {
     updateThemeIcon();
   });
 
-  searchForm.addEventListener('submit', (e) => {
-    e.preventDefault();
-    state.searchQuery = searchInput.value.trim();
-    window.location.hash = '#/';
-    renderHome();
-  });
-
-  searchInput.addEventListener('input', (e) => {
-    state.searchQuery = e.target.value.trim();
-    if (state.searchQuery === '') {
+  // Listener para busca padrão (mobile)
+  if (searchForm) {
+    searchForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      state.searchQuery = searchInput.value.trim();
+      if (searchInputCompact) searchInputCompact.value = state.searchQuery;
+      window.location.hash = '#/';
       renderHome();
-    }
-  });
+    });
+  }
+
+  if (searchInput) {
+    searchInput.addEventListener('input', (e) => {
+      state.searchQuery = e.target.value.trim();
+      if (searchInputCompact) searchInputCompact.value = state.searchQuery;
+      if (state.searchQuery === '') {
+        renderHome();
+      }
+    });
+  }
+
+  // Listener para busca compacta (desktop)
+  if (searchFormCompact) {
+    searchFormCompact.addEventListener('submit', (e) => {
+      e.preventDefault();
+      state.searchQuery = searchInputCompact.value.trim();
+      if (searchInput) searchInput.value = state.searchQuery;
+      window.location.hash = '#/';
+      renderHome();
+    });
+  }
+
+  if (searchInputCompact) {
+    searchInputCompact.addEventListener('input', (e) => {
+      state.searchQuery = e.target.value.trim();
+      if (searchInput) searchInput.value = state.searchQuery;
+      if (state.searchQuery === '') {
+        renderHome();
+      }
+    });
+  }
 
   window.addEventListener('hashchange', handleRouting);
 }
@@ -225,14 +255,12 @@ function renderHome() {
     const topIds = new Set([featured.id, card2?.id, card3?.id].filter(Boolean));
     const gridItems = filteredNoticias.filter(n => !topIds.has(n.id));
 
-    // Monta os marcadores adicionais para a matéria principal da esquerda
+    // Monta os marcadores adicionais para a matéria principal da esquerda (usando outras notícias para evitar redundância)
     let bulletsHtml = '';
-    if (card2) {
-      bulletsHtml += `<li><a href="#/noticia/${card2.slug}">${card2.title}</a></li>`;
-    }
-    if (card3) {
-      bulletsHtml += `<li><a href="#/noticia/${card3.slug}">${card3.title}</a></li>`;
-    }
+    const bulletNews = gridItems.slice(0, 2);
+    bulletNews.forEach(bn => {
+      bulletsHtml += `<li><a href="#/noticia/${bn.slug}">${bn.title}</a></li>`;
+    });
 
     htmlContent += `
       <div class="home-grid">
@@ -834,7 +862,7 @@ function renderAdminDashboard(user) {
     const category = inCategory.value;
     prevBadge.textContent = category;
     prevBadge.style.backgroundColor = getCategoryColor(category);
-
+ 
     const defaultImg = 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=1200&q=80';
     
     if (inImageFile.files && inImageFile.files[0]) {

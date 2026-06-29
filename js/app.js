@@ -46,6 +46,140 @@ function updateHeaderDate() {
   }
 }
 
+// Atualiza as tags SEO na head do documento e os dados estruturados JSON-LD (SEO Local)
+function updateSEO(title, description, imageUrl, relativeUrl, type = 'website', extraData = null) {
+  const siteName = 'Sobre o Povo | Portal de Notícias de Mato Grosso';
+  const fullTitle = title === 'Sobre o Povo' ? siteName : `${title} | Sobre o Povo`;
+  const absoluteUrl = `https://sobreopovo.com.br/${relativeUrl}`;
+  const finalImage = imageUrl || 'https://sobreopovo.com.br/assets/logosemfundo.png';
+
+  // 1. Atualiza elementos DOM na head
+  document.title = fullTitle;
+  
+  const metaDesc = document.getElementById('meta-description');
+  if (metaDesc) metaDesc.setAttribute('content', description);
+  
+  const canonical = document.getElementById('canonical-link');
+  if (canonical) canonical.setAttribute('href', absoluteUrl);
+
+  // 2. Atualiza Open Graph
+  const ogType = document.getElementById('meta-og-type');
+  if (ogType) ogType.setAttribute('content', type);
+  
+  const ogUrl = document.getElementById('meta-og-url');
+  if (ogUrl) ogUrl.setAttribute('content', absoluteUrl);
+  
+  const ogTitle = document.getElementById('meta-og-title');
+  if (ogTitle) ogTitle.setAttribute('content', fullTitle);
+  
+  const ogDesc = document.getElementById('meta-og-desc');
+  if (ogDesc) ogDesc.setAttribute('content', description);
+  
+  const ogImage = document.getElementById('meta-og-image');
+  if (ogImage) ogImage.setAttribute('content', finalImage);
+
+  // 3. Atualiza Twitter Card
+  const twUrl = document.getElementById('meta-tw-url');
+  if (twUrl) twUrl.setAttribute('content', absoluteUrl);
+  
+  const twTitle = document.getElementById('meta-tw-title');
+  if (twTitle) twTitle.setAttribute('content', fullTitle);
+  
+  const twDesc = document.getElementById('meta-tw-desc');
+  if (twDesc) twDesc.setAttribute('content', description);
+  
+  const twImage = document.getElementById('meta-tw-image');
+  if (twImage) twImage.setAttribute('content', finalImage);
+
+  // 4. Manipulação de Dados Estruturados JSON-LD
+  let ldJsonScript = document.getElementById('ld-seo');
+  if (ldJsonScript) {
+    ldJsonScript.remove();
+  }
+
+  let ldData = {};
+
+  if (type === 'article' && extraData) {
+    // Detecta cidades de Mato Grosso para associar localização ao artigo (SEO Local)
+    const mtCities = [
+      'Cuiabá', 'Rondonópolis', 'Várzea Grande', 'Sinop', 'Sorriso',
+      'Lucas do Rio Verde', 'Primavera do Leste', 'Alta Floresta', 'Pontes e Lacerda',
+      'Juína', 'Tangará da Serra', 'Cáceres', 'Nova Mutum', 'Barra do Garças', 'Guarantã do Norte',
+      'São José do Rio Claro', 'Brasnorte', 'Barra do Bugres', 'Comodoro', 'Mirassol d’Oeste', 'Jaciara'
+    ];
+    
+    let detectedCity = null;
+    const textToSearch = `${title} ${description}`.toLowerCase();
+    
+    for (const city of mtCities) {
+      if (textToSearch.includes(city.toLowerCase())) {
+        detectedCity = city;
+        break;
+      }
+    }
+
+    ldData = {
+      "@context": "https://schema.org",
+      "@type": "NewsArticle",
+      "headline": title,
+      "description": description,
+      "image": [finalImage],
+      "datePublished": extraData.date || new Date().toISOString(),
+      "dateModified": extraData.date || new Date().toISOString(),
+      "author": [{
+        "@type": "Person",
+        "name": extraData.author || "Sobre o Povo",
+        "url": "https://sobreopovo.com.br/#/"
+      }],
+      "publisher": {
+        "@type": "Organization",
+        "name": "Sobre o Povo",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://sobreopovo.com.br/assets/logosemfundo.png"
+        }
+      }
+    };
+
+    if (detectedCity) {
+      ldData.contentLocation = {
+        "@type": "Place",
+        "name": `${detectedCity}, Mato Grosso, Brasil`
+      };
+    }
+  } else {
+    // Dados estruturados padrão da Home/Organização focado em MT
+    ldData = {
+      "@context": "https://schema.org",
+      "@type": "NewsMediaOrganization",
+      "name": "Sobre o Povo",
+      "url": "https://sobreopovo.com.br/",
+      "logo": "https://sobreopovo.com.br/assets/logosemfundo.png",
+      "address": {
+        "@type": "PostalAddress",
+        "addressRegion": "MT",
+        "addressCountry": "BR"
+      },
+      "areaServed": [
+        {
+          "@type": "AdministrativeArea",
+          "name": "Mato Grosso"
+        }
+      ],
+      "sameAs": [
+        "https://www.facebook.com/sobreopovomt",
+        "https://www.instagram.com/sobreopovomt"
+      ]
+    };
+  }
+
+  const newScript = document.createElement('script');
+  newScript.type = 'application/ld+json';
+  newScript.id = 'ld-seo';
+  newScript.text = JSON.stringify(ldData, null, 2);
+  document.head.appendChild(newScript);
+}
+
 // Configuração inicial do tema
 function setupTheme() {
   document.documentElement.setAttribute('data-theme', state.theme);
@@ -188,6 +322,33 @@ function renderHome() {
 
   let htmlContent = '';
   let filteredNoticias = [...state.noticias];
+  
+  // Atualiza SEO da Home ou Categoria
+  if (state.currentCategory) {
+    updateSEO(
+      `Notícias de ${state.currentCategory}`,
+      `Acompanhe as últimas notícias comunitárias, cotidiano, economia e política sobre ${state.currentCategory} em Mato Grosso no portal Sobre o Povo.`,
+      null,
+      `#/categoria/${state.currentCategory}`,
+      'website'
+    );
+  } else if (state.searchQuery) {
+    updateSEO(
+      `Busca por "${state.searchQuery}"`,
+      `Resultados de busca para "${state.searchQuery}" no portal de notícias Sobre o Povo.`,
+      null,
+      `#/`,
+      'website'
+    );
+  } else {
+    updateSEO(
+      'Sobre o Povo',
+      'Sobre o Povo - O seu portal de notícias em Mato Grosso. Acompanhe o jornalismo comunitário de Cuiabá, Várzea Grande, Rondonópolis, Sinop e de todo o estado.',
+      null,
+      '#/',
+      'website'
+    );
+  }
   
   if (state.currentCategory) {
     filteredNoticias = filteredNoticias.filter(
@@ -412,6 +573,16 @@ async function renderArticle(slug) {
       );
       return;
     }
+
+    // Atualiza metadados SEO e JSON-LD NewsArticle para buscadores (SEO Local)
+    updateSEO(
+      meta.title,
+      meta.summary,
+      meta.image,
+      `#/noticia/${meta.slug}`,
+      'article',
+      { date: meta.date, author: meta.author }
+    );
 
     // Se o conteúdo começar com tag HTML, assumimos que é rich text, senão tentamos Markdown como fallback
     let bodyHtml = meta.content;

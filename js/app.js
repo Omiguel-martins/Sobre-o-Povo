@@ -12,7 +12,9 @@ const state = {
   noticias: [],
   currentCategory: null,
   searchQuery: '',
-  theme: localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+  theme: localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'),
+  editingId: null,
+  editingSlug: null
 };
 
 // Seletores DOM principais
@@ -598,7 +600,12 @@ function renderAdminDashboard(user) {
 
         <div class="admin-form-card">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; border-bottom: 1px solid var(--color-border); padding-bottom: 1rem;">
-            <h2 class="admin-form-title" style="margin: 0;">Painel de Publicação (Supabase)</h2>
+            <div style="display: flex; flex-direction: column; gap: 0.25rem; align-items: flex-start;">
+              <h2 class="admin-form-title" id="form-mode-title" style="margin: 0;">Painel de Publicação (Supabase)</h2>
+              <button type="button" id="btn-cancel-edit" style="display: none; background: none; border: none; color: var(--color-accent-orange); cursor: pointer; font-size: 0.85rem; font-weight: bold; text-align: left; padding: 0; text-decoration: underline;">
+                ← Cancelar Edição (Voltar ao Cadastro)
+              </button>
+            </div>
             <button id="btn-logout" style="background-color: transparent; border: 1px solid var(--color-border); color: var(--color-text-light); padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; transition: all 0.2s;">
               Sair (Logout)
             </button>
@@ -747,6 +754,29 @@ function renderAdminDashboard(user) {
   const inCredits = document.getElementById('m-credits');
   const btnSubmit = document.getElementById('m-submit-btn');
   const alertContainer = document.getElementById('manager-alert-container');
+  const formModeTitle = document.getElementById('form-mode-title');
+  const btnCancelEdit = document.getElementById('btn-cancel-edit');
+
+  // Ouvinte do botão de Cancelar Edição
+  btnCancelEdit.addEventListener('click', () => {
+    state.editingId = null;
+    state.editingSlug = null;
+    formModeTitle.textContent = 'Painel de Publicação (Supabase)';
+    btnCancelEdit.style.display = 'none';
+    btnSubmit.textContent = 'Publicar Matéria no Portal';
+    
+    // Limpa os campos
+    inTitle.value = '';
+    inSummary.value = '';
+    inImageUrl.value = '';
+    inImageFile.value = '';
+    inContent.innerHTML = '';
+    inFeatured.checked = false;
+    inCredits.value = '';
+    btnCreditsNo.click(); // Volta a opção de créditos para não
+    
+    updatePreview();
+  });
 
   // Elementos de Créditos
   const btnCreditsYes = document.getElementById('btn-credits-yes');
@@ -862,7 +892,7 @@ function renderAdminDashboard(user) {
     const category = inCategory.value;
     prevBadge.textContent = category;
     prevBadge.style.backgroundColor = getCategoryColor(category);
- 
+
     const defaultImg = 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=1200&q=80';
     
     if (inImageFile.files && inImageFile.files[0]) {
@@ -959,32 +989,59 @@ function renderAdminDashboard(user) {
           .eq('featured', true);
       }
 
-      // 2. Inserir a nova notícia na tabela `noticias` do Supabase
-      const { error: insertError } = await supabaseClient
-        .from('noticias')
-        .insert([{
-          slug,
-          title,
-          summary,
-          category,
-          author,
-          image: finalImageUrl,
-          content: contentHtml, // Salva o HTML estruturado do texto
-          featured,
-          credits: credits // Salva a ficha técnica dos envolvidos
-        }]);
+      // 2. Inserir ou Atualizar a notícia na tabela `noticias` do Supabase
+      let dbError;
+      if (state.editingId) {
+        const { error: updateError } = await supabaseClient
+          .from('noticias')
+          .update({
+            slug,
+            title,
+            summary,
+            category,
+            author,
+            image: finalImageUrl,
+            content: contentHtml,
+            featured,
+            credits: credits
+          })
+          .eq('id', state.editingId);
+        dbError = updateError;
+      } else {
+        const { error: insertError } = await supabaseClient
+          .from('noticias')
+          .insert([{
+            slug,
+            title,
+            summary,
+            category,
+            author,
+            image: finalImageUrl,
+            content: contentHtml,
+            featured,
+            credits: credits
+          }]);
+        dbError = insertError;
+      }
 
-      if (insertError) throw insertError;
+      if (dbError) throw dbError;
 
       alertContainer.innerHTML = `
         <div class="alert alert-success">
-          ✅ Matéria publicada e disponível no portal instantaneamente!
+          ✅ Matéria ${state.editingId ? 'atualizada' : 'publicada'} e disponível no portal instantaneamente!
         </div>
       `;
 
       localStorage.setItem('git_author', author);
 
-      // Limpa os campos
+      // Limpa os campos ou reseta o modo de edição
+      if (state.editingId) {
+        state.editingId = null;
+        state.editingSlug = null;
+        formModeTitle.textContent = 'Painel de Publicação (Supabase)';
+        btnCancelEdit.style.display = 'none';
+      }
+
       inTitle.value = '';
       inSummary.value = '';
       inImageUrl.value = '';
@@ -1005,12 +1062,12 @@ function renderAdminDashboard(user) {
       console.error('Erro ao salvar notícia no Supabase:', error);
       alertContainer.innerHTML = `
         <div class="alert alert-error">
-          ❌ Erro ao Publicar: ${error.message || 'Falha de comunicação com o Supabase.'}
+          ❌ Erro ao Salvar: ${error.message || 'Falha de comunicação com o Supabase.'}
         </div>
       `;
     } finally {
       btnSubmit.disabled = false;
-      btnSubmit.textContent = 'Publicar Matéria no Portal';
+      btnSubmit.textContent = state.editingId ? 'Salvar Alterações' : 'Publicar Matéria no Portal';
     }
   });
 
@@ -1032,14 +1089,20 @@ function renderAdminDashboard(user) {
               <strong style="display: block; font-family: var(--font-headings); font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${noticia.title}</strong>
               <span style="font-size: 0.8rem; color: var(--color-text-light);">${noticia.category} &bull; ${formatFriendlyDate(noticia.date)}</span>
             </div>
-            <button class="btn-delete-article" data-id="${noticia.id}" data-title="${noticia.title}" style="background-color: #e74c3c; color: white; border: none; padding: 0.4rem 0.8rem; border-radius: 4px; font-size: 0.8rem; cursor: pointer; font-weight: bold; transition: background-color 0.2s;">
-              Excluir
-            </button>
+            <div style="display: flex; gap: 0.5rem; flex-shrink: 0;">
+              <button class="btn-edit-article" data-id="${noticia.id}" style="background-color: var(--color-accent-orange); color: white; border: none; padding: 0.4rem 0.8rem; border-radius: 4px; font-size: 0.8rem; cursor: pointer; font-weight: bold; transition: background-color 0.2s;">
+                Editar
+              </button>
+              <button class="btn-delete-article" data-id="${noticia.id}" data-title="${noticia.title}" style="background-color: #e74c3c; color: white; border: none; padding: 0.4rem 0.8rem; border-radius: 4px; font-size: 0.8rem; cursor: pointer; font-weight: bold; transition: background-color 0.2s;">
+                Excluir
+              </button>
+            </div>
           </li>
         `).join('')}
       </ul>
     `;
     
+    // Ouvinte do botão de deletar
     const deleteButtons = listContainer.querySelectorAll('.btn-delete-article');
     deleteButtons.forEach(btn => {
       btn.addEventListener('click', async (e) => {
@@ -1059,6 +1122,11 @@ function renderAdminDashboard(user) {
 
             if (deleteError) throw deleteError;
 
+            // Se a notícia deletada estava em edição, limpa o formulário
+            if (state.editingId === id) {
+              btnCancelEdit.click();
+            }
+
             await loadNoticiasIndex();
             renderManagerArticlesList();
 
@@ -1074,6 +1142,50 @@ function renderAdminDashboard(user) {
             alert(`Erro ao Excluir: ${error.message || 'Falha de comunicação com o Supabase.'}`);
             btn.disabled = false;
             btn.textContent = originalText;
+          }
+        }
+      });
+    });
+
+    // Ouvinte do botão de editar
+    const editButtons = listContainer.querySelectorAll('.btn-edit-article');
+    editButtons.forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const id = btn.getAttribute('data-id');
+        const noticia = state.noticias.find(n => n.id === id);
+        
+        if (noticia) {
+          state.editingId = noticia.id;
+          state.editingSlug = noticia.slug;
+          
+          formModeTitle.textContent = 'Editando Matéria (Supabase)';
+          btnCancelEdit.style.display = 'inline-block';
+          btnSubmit.textContent = 'Salvar Alterações';
+          
+          // Preenche os campos do formulário
+          inAuthor.value = noticia.author || 'Redação';
+          inCategory.value = noticia.category;
+          inTitle.value = noticia.title;
+          inSummary.value = noticia.summary;
+          inImageUrl.value = noticia.image || '';
+          inImageFile.value = ''; // Não pode preencher input file por segurança
+          inContent.innerHTML = noticia.content || '';
+          inFeatured.checked = noticia.featured === true;
+          
+          if (noticia.credits) {
+            inCredits.value = noticia.credits;
+            btnCreditsYes.click();
+          } else {
+            inCredits.value = '';
+            btnCreditsNo.click();
+          }
+          
+          updatePreview();
+          
+          // Scroll suave até o início do formulário
+          const formCard = document.querySelector('.admin-form-card');
+          if (formCard) {
+            window.scrollTo({ top: formCard.offsetTop - 20, behavior: 'smooth' });
           }
         }
       });

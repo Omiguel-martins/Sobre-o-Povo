@@ -1,0 +1,64 @@
+name: Scraper Autônomo de Notícias — Sobre o Povo
+
+on:
+  schedule:
+    # Executa 4 vezes ao dia nos horários de pico de leitura (horário de Brasília UTC-3)
+    # 06:00, 11:00, 15:00 e 20:00 no horário de Cuiabá (UTC-4)
+    - cron: '0 10 * * *'   # 06:00 Cuiabá
+    - cron: '0 15 * * *'   # 11:00 Cuiabá
+    - cron: '0 19 * * *'   # 15:00 Cuiabá
+    - cron: '0 0 * * *'    # 20:00 Cuiabá
+  
+  # Permite execução manual a qualquer momento pelo painel do GitHub Actions
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Executar em modo dry-run (sem gravar dados reais)?'
+        required: false
+        default: 'false'
+        type: boolean
+
+jobs:
+  scraper:
+    name: Executar Pipeline de Notícias
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: ⬇️ Clonar repositório
+        uses: actions/checkout@v4
+
+      - name: 🟢 Configurar Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: scraper/package-lock.json
+
+      - name: 📦 Instalar dependências do scraper
+        working-directory: scraper
+        run: npm ci
+
+      - name: 🧪 Executar testes (dry-run)
+        working-directory: scraper
+        run: npm test
+
+      - name: 🚀 Executar pipeline em produção
+        if: ${{ github.event.inputs.dry_run != 'true' }}
+        working-directory: scraper
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: npm start
+
+      - name: 🧪 Executar pipeline em modo dry-run (acionamento manual)
+        if: ${{ github.event.inputs.dry_run == 'true' }}
+        working-directory: scraper
+        run: npm run dry-run
+
+      - name: 📋 Notificar conclusão
+        if: always()
+        run: |
+          echo "Pipeline finalizado em $(TZ='America/Cuiaba' date '+%d/%m/%Y %H:%M:%S')."
+          echo "Status do job: ${{ job.status }}"

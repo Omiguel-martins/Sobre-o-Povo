@@ -116,9 +116,9 @@ async function rewriteArticleWithRetry(model, rawArticle, maxRetries = 3) {
       const isServiceUnavailable = err.message.includes('503') || err.message.includes('Unavailable') || err.message.includes('high demand');
 
       if ((isRateLimit || isServiceUnavailable) && attempt < maxRetries) {
-        // Se for limite de cota (429), aguarda 30s. Se for indisponibilidade (503), aguarda 15s.
-        const waitTime = isRateLimit ? 30000 : 15000;
-        console.warn(`  ⚠️  Erro temporário na API do Gemini (${err.message.slice(0, 100)}...). Tentativa ${attempt}/${maxRetries}. Aguardando ${waitTime / 1000}s para tentar novamente...`);
+        // Aguarda 60 segundos antes de tentar novamente para garantir a liberação da cota do Free Tier
+        const waitTime = 60000;
+        console.warn(`  ⚠️  Erro temporário na API do Gemini (${err.message.slice(0, 100)}...). Tentativa ${attempt}/${maxRetries}. Aguardando 60s para tentar novamente...`);
         await new Promise((r) => setTimeout(r, waitTime));
       } else {
         throw err; // Erro fatal ou esgotou as tentativas de revalidação
@@ -150,7 +150,7 @@ export async function rewriteArticles(rawArticles, dryRun = false) {
 
   const model = createGeminiClient();
   const rewritten = [];
-  const DELAY_MS = 12000; // 12 segundos garante não estourar a cota gratuita de 5 RPM (5 requisições por minuto)
+  const DELAY_MS = 55000; // 55 segundos de delay garante segurança máxima contra o limite de 5 RPM do Free Tier
 
   for (let i = 0; i < rawArticles.length; i++) {
     const article = rawArticles[i];

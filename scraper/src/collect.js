@@ -259,12 +259,21 @@ export async function collectNews() {
 
   for (const portal of PORTALS) {
     console.log(`\n🔍 Portal: ${portal.name}`);
-    const articles = portal.requiresBrowser
-      ? await scrapeWithBrowser(portal)
-      : await scrapeWithAxios(portal);
+    let articles = [];
+
+    if (portal.requiresBrowser) {
+      articles = await scrapeWithBrowser(portal);
+    } else {
+      articles = await scrapeWithAxios(portal);
+      // Fallback robusto se o Axios der erro (timeout, 403, etc.) ou não encontrar nada
+      if (!articles || articles.length === 0) {
+        console.log(`  🔄 [Fallback] Axios falhou ou não coletou artigos de ${portal.name}. Tentando com Puppeteer...`);
+        articles = await scrapeWithBrowser({ ...portal, requiresBrowser: true });
+      }
+    }
 
     const valid = articles.filter(Boolean);
-    console.log(`  ✅ ${valid.length} artigos coletados.`);
+    console.log(`  ✅ ${valid.length} artigos processados para ${portal.name}.`);
     allArticles.push(...valid);
   }
 

@@ -51,7 +51,7 @@ Fonte: ${rawArticle.sourceName} (${rawArticle.sourceUrl})
 3. Use linguagem jornalística clara, objetiva e acessível para o grande público.
 4. Estruture o conteúdo em HTML semântico usando apenas: <p>, <strong>, <em>, <ul>, <li>, <h3>
 5. O corpo deve ter no mínimo 3 parágrafos.
-6. Classifique a matéria em UMA das categorias: Brasil, Política, Cidades, Economia, Cultura, Celebridades, Opinião.
+6. Classifique a matéria em uma categoria. Priorize as categorias oficiais (Brasil, Política, Cidades, Economia, Cultura, Celebridades, Opinião) se couberem perfeitamente no assunto, mas você tem total liberdade para criar novas categorias (como Esportes, Polícia, Tecnologia, Mundo, Saúde, etc.) caso a matéria trate de um tema totalmente diferente.
 7. Escreva a ficha técnica/créditos no campo "credits" focando sempre nas fontes oficiais da informação primária mencionadas na notícia (como prefeituras, batalhões da polícia, delegacias, Politec, etc.), omitindo o link ou nome do portal concorrente de origem (como G1, Resumo MT, Olhar Direto). Exemplos de formatos recomendados:
    - Se for investigação criminal ou perícia: "Informações oficiais da [Delegacia/Órgão investigador] e Perícia Oficial e Identificação Técnica (Politec) de Mato Grosso"
    - Se for policiamento ou flagrante/BO: "Dados obtidos com o [Batalhão] da Polícia Militar e boletim de ocorrência registrado pela Polícia Civil de MT"
@@ -76,9 +76,17 @@ Fonte: ${rawArticle.sourceName} (${rawArticle.sourceUrl})
 
   const parsed = JSON.parse(jsonText);
 
-  // Valida e normaliza a categoria
-  if (!VALID_CATEGORIES.includes(parsed.category)) {
-    parsed.category = 'Brasil'; // fallback seguro
+  // Normaliza a categoria (Title Case e remove espaços extras)
+  if (typeof parsed.category === 'string') {
+    let cat = parsed.category.trim();
+    if (cat.length > 0) {
+      // Capitaliza a primeira letra de cada palavra ou apenas a primeira letra global
+      parsed.category = cat.charAt(0).toUpperCase() + cat.slice(1);
+    } else {
+      parsed.category = 'Brasil';
+    }
+  } else {
+    parsed.category = 'Brasil';
   }
 
   return {

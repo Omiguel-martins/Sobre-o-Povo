@@ -5,33 +5,94 @@ import * as cheerio from 'cheerio';
 // Configuração dos portais monitorados
 // ─────────────────────────────────────────────
 const PORTALS = [
+  // ── HOME E GERAIS ───────────────────────────────────────────
   {
-    name: 'Resumo MT',
+    name: 'Resumo MT (Geral)',
     url: 'https://resumomt.com.br/',
     articleSelector: 'article a, .post-title a, h2 a, h3 a',
     requiresBrowser: false,
   },
   {
-    name: 'Olhar Direto',
+    name: 'Olhar Direto (Geral)',
     url: 'https://www.olhardireto.com.br/',
     articleSelector: '.noticia-title a, .titulo-noticia a, h2 a, .news-title a',
     requiresBrowser: false,
   },
   {
-    name: 'MidiaNews',
+    name: 'MidiaNews (Geral)',
     url: 'https://www.midianews.com.br/',
     articleSelector: 'article a, .entry-title a, h2 a',
     requiresBrowser: false,
   },
   {
-    name: 'G1 MT',
+    name: 'G1 MT (Geral)',
     url: 'https://g1.globo.com/mt/',
     articleSelector: '.feed-post-link, .bastian-feed-item a, ._3DNx- a',
-    requiresBrowser: true, // G1 usa JavaScript pesado
+    requiresBrowser: true,
+  },
+  
+  // ── POLÍTICA E JUDICIÁRIO ─────────────────────────────────────
+  {
+    name: 'G1 Política (Nacional)',
+    url: 'https://g1.globo.com/politica/',
+    articleSelector: '.feed-post-link, .bastian-feed-item a, ._3DNx- a',
+    requiresBrowser: true,
+  },
+  {
+    name: 'Olhar Direto (Política)',
+    url: 'https://www.olhardireto.com.br/politica/',
+    articleSelector: '.noticia-title a, .titulo-noticia a, h2 a, .news-title a',
+    requiresBrowser: false,
+  },
+  {
+    name: 'MidiaNews (Política)',
+    url: 'https://www.midianews.com.br/politica',
+    articleSelector: 'article a, .entry-title a, h2 a',
+    requiresBrowser: false,
+  },
+  {
+    name: 'Resumo MT (Política)',
+    url: 'https://resumomt.com.br/politica',
+    articleSelector: 'article a, .post-title a, h2 a, h3 a',
+    requiresBrowser: false,
+  },
+  
+  // ── ECONOMIA E AGRO ───────────────────────────────────────────
+  {
+    name: 'G1 Economia (Nacional)',
+    url: 'https://g1.globo.com/economia/',
+    articleSelector: '.feed-post-link, .bastian-feed-item a, ._3DNx- a',
+    requiresBrowser: true,
+  },
+  {
+    name: 'Olhar Direto (Agro/Economia)',
+    url: 'https://www.olhardireto.com.br/agro/',
+    articleSelector: '.noticia-title a, .titulo-noticia a, h2 a, .news-title a',
+    requiresBrowser: false,
+  },
+  {
+    name: 'MidiaNews (Economia)',
+    url: 'https://www.midianews.com.br/economia',
+    articleSelector: 'article a, .entry-title a, h2 a',
+    requiresBrowser: false,
+  },
+  
+  // ── CELEBRIDADES E CULTURA ────────────────────────────────────
+  {
+    name: 'G1 Pop & Arte (Celebridades)',
+    url: 'https://g1.globo.com/pop-arte/',
+    articleSelector: '.feed-post-link, .bastian-feed-item a, ._3DNx- a',
+    requiresBrowser: true,
+  },
+  {
+    name: 'Olhar Direto (Conceito/Celebridades)',
+    url: 'https://www.olhardireto.com.br/olhar-conceito/',
+    articleSelector: '.noticia-title a, .titulo-noticia a, h2 a, .news-title a',
+    requiresBrowser: false,
   },
 ];
 
-const MAX_ARTICLES_PER_PORTAL = 5;
+const MAX_ARTICLES_PER_PORTAL = 15;
 
 // ─────────────────────────────────────────────
 // Scraper com Axios + Cheerio (portais simples)

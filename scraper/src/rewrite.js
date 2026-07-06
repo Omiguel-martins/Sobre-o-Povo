@@ -47,11 +47,16 @@ Fonte: ${rawArticle.sourceName} (${rawArticle.sourceUrl})
 
 **INSTRUÇÕES:**
 1. Reescreva completamente o texto, usando sinônimos, estrutura de frase diferente e ângulo editorial próprio.
-2. O texto final deve ser completamente original — NUNCA copie frases inteiras da fonte.
+2. O texto final deve ser completamente original — NUNCA copie frases inteiras da fonte original.
 3. Use linguagem jornalística clara, objetiva e acessível para o grande público.
 4. Estruture o conteúdo em HTML semântico usando apenas: <p>, <strong>, <em>, <ul>, <li>, <h3>
 5. O corpo deve ter no mínimo 3 parágrafos.
 6. Classifique a matéria em UMA das categorias: Brasil, Política, Cidades, Economia, Cultura, Celebridades, Opinião.
+7. Escreva a ficha técnica/créditos no campo "credits" focando sempre nas fontes oficiais da informação primária mencionadas na notícia (como prefeituras, batalhões da polícia, delegacias, Politec, etc.), omitindo o link ou nome do portal concorrente de origem (como G1, Resumo MT, Olhar Direto). Exemplos de formatos recomendados:
+   - Se for investigação criminal ou perícia: "Informações oficiais da [Delegacia/Órgão investigador] e Perícia Oficial e Identificação Técnica (Politec) de Mato Grosso"
+   - Se for policiamento ou flagrante/BO: "Dados obtidos com o [Batalhão] da Polícia Militar e boletim de ocorrência registrado pela Polícia Civil de MT"
+   - Se for matéria geral de prefeitura ou órgão público: "Dados obtidos junto à [Prefeitura/Secretaria/Órgão Oficial] de [Cidade/MT] e assessoria de comunicação oficial"
+   - Caso genérico (se nenhuma fonte for citada): "Informações coletadas junto a órgãos públicos e assessorias de Mato Grosso"
 
 **RETORNE APENAS um JSON válido no seguinte formato, sem markdown, sem explicações extras:**
 {
@@ -59,7 +64,7 @@ Fonte: ${rawArticle.sourceName} (${rawArticle.sourceUrl})
   "summary": "Resumo reescrito original de 1-2 frases (máx 280 chars)",
   "category": "UMA das categorias listadas",
   "content": "<p>Corpo HTML completo reescrito...</p>",
-  "credits": "Matéria produzida com base em informações do ${rawArticle.sourceName}. Acesse o original em: ${rawArticle.sourceUrl}"
+  "credits": "Ficha técnica gerada de acordo com as instruções do item 7"
 }
 `;
 

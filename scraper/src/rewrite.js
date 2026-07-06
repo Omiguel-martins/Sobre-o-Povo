@@ -103,6 +103,31 @@ Fonte: ${rawArticle.sourceName} (${rawArticle.sourceUrl})
 }
 
 // ─────────────────────────────────────────────
+// Executa a requisição ao Gemini com lógica de Retry (429/503)
+// ─────────────────────────────────────────────
+async function rewriteArticleWithRetry(model, rawArticle, maxRetries = 3) {
+  let attempt = 0;
+  while (attempt < maxRetries) {
+    try {
+      return await rewriteArticle(model, rawArticle);
+    } catch (err) {
+      attempt++;
+      const isRateLimit = err.message.includes('429') || err.message.includes('Quota exceeded') || err.message.includes('Too Many Requests');
+      const isServiceUnavailable = err.message.includes('503') || err.message.includes('Unavailable') || err.message.includes('high demand');
+
+      if ((isRateLimit || isServiceUnavailable) && attempt < maxRetries) {
+        // Se for limite de cota (429), aguarda 30s. Se for indisponibilidade (503), aguarda 15s.
+        const waitTime = isRateLimit ? 30000 : 15000;
+        console.warn(`  ⚠️  Erro temporário na API do Gemini (${err.message.slice(0, 100)}...). Tentativa ${attempt}/${maxRetries}. Aguardando ${waitTime / 1000}s para tentar novamente...`);
+        await new Promise((r) => setTimeout(r, waitTime));
+      } else {
+        throw err; // Erro fatal ou esgotou as tentativas de revalidação
+      }
+    }
+  }
+}
+
+// ─────────────────────────────────────────────
 // Função principal de reescrita
 // ─────────────────────────────────────────────
 export async function rewriteArticles(rawArticles, dryRun = false) {
@@ -125,22 +150,22 @@ export async function rewriteArticles(rawArticles, dryRun = false) {
 
   const model = createGeminiClient();
   const rewritten = [];
-  const DELAY_MS = 2000; // Respeitar rate limiting da API
+  const DELAY_MS = 12000; // 12 segundos garante não estourar a cota gratuita de 5 RPM (5 requisições por minuto)
 
   for (let i = 0; i < rawArticles.length; i++) {
     const article = rawArticles[i];
     console.log(`  [${i + 1}/${rawArticles.length}] Reescrevendo: "${article.title.slice(0, 60)}..."`);
 
     try {
-      const result = await rewriteArticle(model, article);
+      const result = await rewriteArticleWithRetry(model, article);
       rewritten.push(result);
       console.log(`  ✅ Sucesso — Categoria: ${result.category} | Slug: ${result.slug}`);
     } catch (err) {
-      console.error(`  ❌ Falha ao reescrever artigo "${article.title}": ${err.message}`);
+      console.error(`  ❌ Falha definitiva ao reescrever artigo "${article.title}": ${err.message}`);
       // Continua para o próximo artigo sem interromper o pipeline
     }
 
-    // Delay para não sobrecarregar a API
+    // Delay preventivo para respeitar o limite de 5 requisições por minuto
     if (i < rawArticles.length - 1) {
       await new Promise((r) => setTimeout(r, DELAY_MS));
     }

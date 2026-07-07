@@ -47,7 +47,7 @@ async function main() {
       process.exit(0);
     }
 
-    // ── FASE DE DEDUPLICAÇÃO PRÉVIA & LIMITAÇÃO DE COTA ───────────
+    // ── FASE DE DEDUPLICAÇÃO PRÉVIA ──────────────────────────────
     let articlesToProcess = [];
     if (isDryRun) {
       // No dry-run simulamos apenas com os primeiros 3 artigos coletados
@@ -76,10 +76,9 @@ async function main() {
         process.exit(0);
       }
 
-      // Limita a no máximo 4 novas matérias por ciclo de execução
-      const MAX_NEW_ARTICLES = 4;
-      articlesToProcess = uniqueArticles.slice(0, MAX_NEW_ARTICLES);
-      console.log(`\n📌 Matérias novas encontradas: ${uniqueArticles.length}. Processando lote de ${articlesToProcess.length} artigos nesta rodada para respeitar as cotas diárias da IA.`);
+      // Processa todas as matérias inéditas encontradas a pedido do usuário
+      articlesToProcess = uniqueArticles;
+      console.log(`\n📌 Matérias novas encontradas: ${uniqueArticles.length}. Processando a reescrita e publicação de todas as ${articlesToProcess.length} matérias.`);
     }
 
     // ── FASE 2: Reescrita (Gemini) ───────────────────────────────

@@ -8,7 +8,7 @@ const STORAGE_BUCKET = 'imagens-noticias';
 // ─────────────────────────────────────────────
 // Inicializa o cliente Supabase (Service Role)
 // ─────────────────────────────────────────────
-function createSupabaseClient() {
+export function createSupabaseClient() {
   if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
     throw new Error('SUPABASE_URL ou SUPABASE_SERVICE_KEY não definidos nas variáveis de ambiente.');
   }
@@ -19,15 +19,17 @@ function createSupabaseClient() {
 // Verifica se a notícia já existe no banco
 // pelo slug ou pela URL de origem
 // ─────────────────────────────────────────────
-async function isDuplicate(supabase, slug, sourceUrl) {
+export async function isDuplicate(supabase, slug, sourceUrl) {
   // Checa por slug
-  const { data: bySlug } = await supabase
-    .from('noticias')
-    .select('id')
-    .eq('slug', slug)
-    .maybeSingle();
+  if (slug) {
+    const { data: bySlug } = await supabase
+      .from('noticias')
+      .select('id')
+      .eq('slug', slug)
+      .maybeSingle();
 
-  if (bySlug) return true;
+    if (bySlug) return true;
+  }
 
   // Checa por URL de origem (campo credits contém a URL original)
   const { data: bySource } = await supabase
@@ -141,7 +143,7 @@ export async function publishArticles(rewrittenArticles, dryRun = false) {
     console.log(`\n  📰 Processando: "${article.title.slice(0, 70)}..."`);
 
     try {
-      // 1. Verificar duplicidade
+      // 1. Verificar duplicidade (slug já gerado)
       const duplicate = await isDuplicate(supabase, article.slug, article.sourceUrl);
       if (duplicate) {
         console.log(`  ⏭️  Já publicado. Pulando.`);

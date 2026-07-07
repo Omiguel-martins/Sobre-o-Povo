@@ -14,7 +14,7 @@
 
 import { collectNews } from './collect.js';
 import { rewriteArticles } from './rewrite.js';
-import { publishArticles } from './publish.js';
+import { publishArticles, createSupabaseClient, isDuplicate } from './publish.js';
 
 const isDryRun = process.argv.includes('--dry-run');
 
@@ -47,11 +47,46 @@ async function main() {
       process.exit(0);
     }
 
+    // ── FASE DE DEDUPLICAÇÃO PRÉVIA & LIMITAÇÃO DE COTA ───────────
+    let articlesToProcess = [];
+    if (isDryRun) {
+      // No dry-run simulamos apenas com os primeiros 3 artigos coletados
+      articlesToProcess = rawArticles.slice(0, 3);
+      console.log(`\n🧪 [DRY-RUN] Processando lote simulado de ${articlesToProcess.length} artigos.`);
+    } else {
+      console.log('\n🔍 Verificando duplicidade com o Supabase antes de iniciar reescrita...');
+      const supabase = createSupabaseClient();
+      const uniqueArticles = [];
+      
+      for (const article of rawArticles) {
+        // Evita duplicar links dentro do mesmo lote coletado
+        const isAlreadyInArray = uniqueArticles.some(a => a.sourceUrl === article.sourceUrl);
+        if (isAlreadyInArray) continue;
+
+        const dup = await isDuplicate(supabase, '', article.sourceUrl);
+        if (dup) {
+          console.log(`  ⏭️  Já publicado: "${article.title.slice(0, 50)}..."`);
+        } else {
+          uniqueArticles.push(article);
+        }
+      }
+
+      if (uniqueArticles.length === 0) {
+        console.log('\n⚠️  Todas as notícias coletadas já existem no banco. Encerrando pipeline.');
+        process.exit(0);
+      }
+
+      // Limita a no máximo 4 novas matérias por ciclo de execução
+      const MAX_NEW_ARTICLES = 4;
+      articlesToProcess = uniqueArticles.slice(0, MAX_NEW_ARTICLES);
+      console.log(`\n📌 Matérias novas encontradas: ${uniqueArticles.length}. Processando lote de ${articlesToProcess.length} artigos nesta rodada para respeitar as cotas diárias da IA.`);
+    }
+
     // ── FASE 2: Reescrita (Gemini) ───────────────────────────────
-    const rewrittenArticles = await rewriteArticles(rawArticles, isDryRun);
+    const rewrittenArticles = await rewriteArticles(articlesToProcess, isDryRun);
 
     if (rewrittenArticles.length === 0) {
-      console.log('\n⚠️  Nenhum artigo foi reescrito. Encerrando pipeline.');
+      console.log('\n⚠️  Nenhum artigo foi reescrito nesta execução. Encerrando pipeline.');
       process.exit(0);
     }
 

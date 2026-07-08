@@ -148,32 +148,53 @@ function updateSEO(title, description, imageUrl, relativeUrl, type = 'website', 
       };
     }
   } else {
+    // Dados estruturados padrão da Home/Organização focado em MT
     ldData = {
       "@context": "https://schema.org",
-      "@type": "WebSite",
+      "@type": "NewsMediaOrganization",
       "name": "Sobre o Povo",
-      "alternateName": "Sobre o Povo Mato Grosso",
-      "url": "https://sobreopovo.com.br/"
+      "url": "https://sobreopovo.com.br/",
+      "logo": "https://sobreopovo.com.br/assets/logosemfundo.png",
+      "address": {
+        "@type": "PostalAddress",
+        "addressRegion": "MT",
+        "addressCountry": "BR"
+      },
+      "areaServed": [
+        {
+          "@type": "AdministrativeArea",
+          "name": "Mato Grosso"
+        }
+      ],
+      "sameAs": [
+        "https://www.facebook.com/sobreopovomt",
+        "https://www.instagram.com/sobreopovomt"
+      ]
     };
   }
 
-  const script = document.createElement('script');
-  script.type = 'application/ld+json';
-  script.id = 'ld-seo';
-  script.text = JSON.stringify(ldData);
-  document.head.appendChild(script);
+  const newScript = document.createElement('script');
+  newScript.type = 'application/ld+json';
+  newScript.id = 'ld-seo';
+  newScript.text = JSON.stringify(ldData, null, 2);
+  document.head.appendChild(newScript);
 }
 
-// Configuração do Tema Visual (Claro / Escuro)
+
+// Configuração inicial do tema
 function setupTheme() {
   document.documentElement.setAttribute('data-theme', state.theme);
   updateThemeIcon();
 }
 
-// Atualiza o emoji do botão de alternador de tema
+// Atualiza o ícone do tema (sol/lua)
 function updateThemeIcon() {
-  if (themeToggleBtn) {
-    themeToggleBtn.textContent = state.theme === 'light' ? '🌙' : '☀️';
+  if (state.theme === 'dark') {
+    themeToggleBtn.innerHTML = '☀️';
+    themeToggleBtn.setAttribute('title', 'Mudar para o Modo Claro');
+  } else {
+    themeToggleBtn.innerHTML = '🌙';
+    themeToggleBtn.setAttribute('title', 'Mudar para o Modo Escuro');
   }
 }
 
@@ -300,6 +321,9 @@ function handleRouting() {
   } else if (hash === '#/vagas') {
     updateActiveNavLink('vagas');
     renderJobs();
+  } else if (hash === '#/anunciar-vaga') {
+    updateActiveNavLink(null);
+    renderAnnounceJob();
   } else {
     mainContent.innerHTML = renderErrorState('Página Não Encontrada', 'A seção que você está procurando não existe.');
   }
@@ -438,15 +462,27 @@ function renderHome() {
 
     htmlContent += `
       <!-- Banner de Destaque de Vagas de Emprego no Topo -->
-      <div class="jobs-highlight-banner">
+      <div class="jobs-highlight-banner" style="margin-bottom: 1rem;">
         <div class="jobs-highlight-content">
           <span class="jobs-highlight-badge">NOVO</span>
           <div class="jobs-highlight-info">
-            <h3 class="jobs-highlight-title">💼 Portal de Vagas de Emprego MT</h3>
-            <p class="jobs-highlight-desc">Encontre oportunidades de trabalho e estágio na Baixada Cuiabana e em todo o estado de Mato Grosso.</p>
+            <h3 class="jobs-highlight-title">Portal de Vagas de Emprego MT</h3>
+            <p class="jobs-highlight-desc">Encontre oportunidades de trabalho em Rondonópolis, Cuiabá e em todo o estado de Mato Grosso.</p>
           </div>
         </div>
         <a href="#/vagas" class="jobs-highlight-btn">Ver Vagas →</a>
+      </div>
+
+      <!-- Banner de Anúncio para Empresas -->
+      <div class="jobs-highlight-banner companies-banner" style="margin-bottom: 2rem; border-left-color: var(--color-category-blue);">
+        <div class="jobs-highlight-content">
+          <span class="jobs-highlight-badge" style="background-color: var(--color-category-blue);">EMPRESAS</span>
+          <div class="jobs-highlight-info">
+            <h3 class="jobs-highlight-title">Está contratando? Anuncie sua vaga aqui!</h3>
+            <p class="jobs-highlight-desc">Cadastre as oportunidades da sua empresa e encontre talentos locais rapidamente.</p>
+          </div>
+        </div>
+        <a href="#/anunciar-vaga" class="jobs-highlight-btn" style="background-color: var(--color-category-blue);">Anunciar Vaga →</a>
       </div>
 
       <div class="home-grid">
@@ -786,7 +822,7 @@ function renderAdminDashboard(user) {
           <div class="tutorial-title">📖 Como Publicar Matérias no Novo Painel</div>
           <ol class="tutorial-list">
             <li>Insira as informações básicas (Autor, Editoria, Título e Resumo).</li>
-            <li>No campo **Corpo da Matéria**, digite o text livremente como no Word ou Notion.</li>
+            <li>No campo **Corpo da Matéria**, digite o texto livremente como no Word ou Notion.</li>
             <li>**Para formatar o texto:** Use o mouse ou teclado para selecionar qualquer palavra ou trecho do texto. Um menu flutuante aparecerá na hora com opções de **Negrito, Itálico, Sublinhado, Subtítulo, Listas e Links**!</li>
             <li>Escolha se deseja colocar créditos no rodapé e clique em **Publicar Matéria**.</li>
           </ol>
@@ -914,7 +950,7 @@ function renderAdminDashboard(user) {
             <img class="article-hero-img" id="prev-image" src="https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=1200&q=80" alt="Capa" style="margin-bottom: 1.5rem;" />
 
             <div class="article-body" id="prev-body">
-              <p>O corpo da notícia redigido no editor aparecerá formatado aqui em tempo real.</p>
+              <p>O corpo da notícia redigido no editor aparecerá formatado aqui in tempo real.</p>
             </div>
             
             <footer class="article-credits-box" id="prev-credits-box" style="display: none; margin-top: 2rem;">
@@ -1409,7 +1445,9 @@ function renderJobs() {
       type: 'CLT',
       salary: 'R$ 1.800,00',
       benefits: 'VT + VR + Plano de Saúde',
-      description: 'Auxílio na rotina administrativa, contas a pagar/receber, emissão de notas fiscais, controle de planilhas e atendimento ao cliente.'
+      description: 'Auxílio na rotina administrativa, contas a pagar/receber, emissão de notas fiscais, controle de planilhas e atendimento ao cliente.',
+      image: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=400&q=80',
+      contactInfo: 'contato@varejistacuiaba.com.br ou (65) 99988-7766'
     },
     {
       id: 2,
@@ -1419,7 +1457,9 @@ function renderJobs() {
       type: 'CLT/PJ',
       salary: 'R$ 3.500,00',
       benefits: 'VR + Auxílio Home Office',
-      description: 'Desenvolvimento e manutenção de interfaces responsivas utilizando HTML, CSS, JavaScript e React. Integração com APIs.'
+      description: 'Desenvolvimento e manutenção de interfaces responsivas utilizando HTML, CSS, JavaScript e React. Integração com APIs.',
+      image: 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=400&q=80',
+      contactInfo: 'rh@techsolutionsmt.dev'
     },
     {
       id: 3,
@@ -1429,7 +1469,9 @@ function renderJobs() {
       type: 'CLT',
       salary: 'R$ 1.650,00',
       benefits: 'Comissão + VT + Seguro de Vida',
-      description: 'Atendimento consultivo ao cliente, organização do salão de vendas, controle de provadores, fechamento de vendas e metas.'
+      description: 'Atendimento consultivo ao cliente, organização do salão de vendas, controle de provadores, fechamento de vendas e metas.',
+      image: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400&q=80',
+      contactInfo: 'contrata@modaestilovg.com.br'
     },
     {
       id: 4,
@@ -1439,7 +1481,9 @@ function renderJobs() {
       type: 'CLT',
       salary: 'R$ 1.900,00',
       benefits: 'Vale Alimentação + VT + Plano de Saúde',
-      description: 'Recebimento, conferência, triagem e estocagem de mercadorias. Preparação de pedidos para expedição e organização do galpão.'
+      description: 'Recebimento, conferência, triagem e estocagem de mercadorias. Preparação de pedidos para expedição e organização do galpão.',
+      image: 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=400&q=80',
+      contactInfo: 'vagas@distribuidoraroo.com.br ou (66) 99888-5544'
     },
     {
       id: 5,
@@ -1449,7 +1493,9 @@ function renderJobs() {
       type: 'Estágio',
       salary: 'R$ 1.000,00',
       benefits: 'Bolsa Auxílio + Auxílio Transporte',
-      description: 'Criação de conteúdo para redes sociais (posts e stories), redação de copys básicas, monitoramento de métricas e suporte em design.'
+      description: 'Criação de conteúdo para redes sociais (posts e stories), redação de copys básicas, monitoramento de métricas e suporte em design.',
+      image: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=400&q=80',
+      contactInfo: 'talentos@agenciasinop.com.br'
     },
     {
       id: 6,
@@ -1459,15 +1505,23 @@ function renderJobs() {
       type: 'CLT',
       salary: 'R$ 4.000,00',
       benefits: 'Comissões + Carro da Empresa + VR',
-      description: 'Atendimento técnico comercial a produtores rurais, venda de defensivos agrícolas, sementes e fertilizantes, e visitas de campo.'
+      description: 'Atendimento técnico comercial a produtores rurais, venda de defensivos agrícolas, sementes e fertilizantes, e visitas de campo.',
+      image: 'https://images.unsplash.com/photo-1500937386664-56d1dfef3854?w=400&q=80',
+      contactInfo: 'agro.sorriso@nutriagro.com.br'
     }
   ];
+
+  // Carrega as vagas customizadas anunciadas pelo formulário no localStorage
+  const customJobs = JSON.parse(localStorage.getItem('custom_jobs_cache') || '[]');
+  
+  // Combina as vagas, colocando as customizadas no topo
+  const allJobs = [...customJobs, ...mockJobs];
 
   let currentSearch = '';
   let selectedCity = 'Todas';
 
   function buildJobsHtml() {
-    let filtered = mockJobs;
+    let filtered = allJobs;
 
     if (currentSearch) {
       const q = currentSearch.toLowerCase();
@@ -1494,23 +1548,32 @@ function renderJobs() {
 
     return filtered.map(job => `
       <div class="job-card" data-id="${job.id}">
-        <div class="job-card-header">
-          <div>
-            <h3 class="job-card-title">${job.title}</h3>
-            <div class="job-card-company">${job.company}</div>
+        <div class="job-card-body-content">
+          ${job.image ? `
+            <div class="job-card-image-container">
+              <img src="${job.image}" alt="Imagem de ${job.company}" loading="lazy" />
+            </div>
+          ` : ''}
+          <div class="job-card-text-details">
+            <div class="job-card-header">
+              <div>
+                <h3 class="job-card-title">${job.title}</h3>
+                <div class="job-card-company">${job.company}</div>
+              </div>
+              <span class="job-badge job-badge-${job.type.toLowerCase().replace('/', '').replace('cltpj', 'clt-pj')}">${job.type}</span>
+            </div>
+            <div class="job-card-meta">
+              <span class="job-meta-item"><span class="icon">📍</span> ${job.location}</span>
+              <span class="job-meta-item"><span class="icon">💰</span> ${job.salary}</span>
+            </div>
+            <p class="job-card-description">${job.description}</p>
+            <div class="job-card-benefits">
+              <strong>Benefícios:</strong> ${job.benefits}
+            </div>
           </div>
-          <span class="job-badge job-badge-${job.type.toLowerCase().replace('/', '')}">${job.type}</span>
-        </div>
-        <div class="job-card-meta">
-          <span class="job-meta-item"><span class="icon">📍</span> ${job.location}</span>
-          <span class="job-meta-item"><span class="icon">💰</span> ${job.salary}</span>
-        </div>
-        <p class="job-card-description">${job.description}</p>
-        <div class="job-card-benefits">
-          <strong>Benefícios:</strong> ${job.benefits}
         </div>
         <div class="job-card-footer">
-          <button class="btn-job-apply" data-title="${job.title}" data-company="${job.company}">Candidatar-se</button>
+          <button class="btn-job-apply" data-title="${job.title}" data-company="${job.company}" data-contact="${job.contactInfo || ''}">Entre em contato com a empresa</button>
         </div>
       </div>
     `).join('');
@@ -1530,7 +1593,6 @@ function renderJobs() {
           <!-- Filtro/Busca -->
           <div class="jobs-filter-bar">
             <div class="jobs-search-wrapper">
-              <span class="search-icon">🔍</span>
               <input 
                 type="text" 
                 id="jobs-search-input" 
@@ -1556,11 +1618,11 @@ function renderJobs() {
         <div class="jobs-whatsapp-card">
           <div class="whatsapp-card-content">
             <div class="whatsapp-icon-bg">
-              <svg viewBox="0 0 24 24" width="36" height="36" fill="currentColor">
+              <svg viewBox="0 0 24 24" width="30" height="30" fill="currentColor">
                 <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.724-1.455L0 24zm6.59-4.846c1.6.95 3.188 1.449 4.825 1.451 5.436.002 9.858-4.419 9.86-9.86.002-2.636-1.019-5.114-2.877-6.973C16.596 1.914 14.12 .89 11.48.889c-5.44 0-9.862 4.418-9.865 9.861-.001 1.693.447 3.34 1.3 4.793l-.999 3.647 3.731-.978zm11.567-7.643c-.307-.154-1.82-.9-2.1-.1-.28.1-.56.408-.686.551-.125.143-.25.215-.558.061-.307-.15-1.3-.479-2.477-1.528-.915-.817-1.533-1.825-1.713-2.132-.18-.307-.019-.473.135-.626.138-.138.307-.36.462-.538.154-.18.206-.307.307-.513.103-.206.051-.385-.026-.538-.077-.154-.686-1.656-.94-2.267-.247-.595-.499-.513-.686-.523-.178-.01-.383-.01-.588-.01-.205 0-.538.077-.82.385-.282.307-1.077 1.051-1.077 2.562 0 1.512 1.097 2.973 1.25 3.178.154.205 2.159 3.299 5.23 4.625.73.315 1.3.504 1.743.645.733.233 1.399.2 1.925.121.587-.087 1.82-.743 2.076-1.46.256-.718.256-1.333.18-1.461-.077-.128-.282-.205-.589-.359z"/>
               </svg>
             </div>
-            <div class="whatsapp-card-info">
+            <div class="jobs-whatsapp-card-info" style="display: flex; flex-direction: column; gap: 0.35rem;">
               <h3 class="whatsapp-card-title">Grupo de Vagas no WhatsApp</h3>
               <p class="whatsapp-card-text">Receba novas oportunidades de emprego em Mato Grosso diretamente no seu celular em tempo real.</p>
             </div>
@@ -1588,7 +1650,7 @@ function renderJobs() {
   }
 
   function updateCount() {
-    let filtered = mockJobs;
+    let filtered = allJobs;
     if (currentSearch) {
       const q = currentSearch.toLowerCase();
       filtered = filtered.filter(j => 
@@ -1633,7 +1695,9 @@ function renderJobs() {
         if (e.target.classList.contains('btn-job-apply')) {
           const title = e.target.getAttribute('data-title');
           const company = e.target.getAttribute('data-company');
-          alert(`Candidatura para a vaga "${title}" na empresa "${company}" enviada com sucesso! (Esta é uma simulação de envio de currículo)`);
+          const contact = e.target.getAttribute('data-contact');
+          
+          alert(`Para se candidatar à vaga de "${title}" na empresa "${company}", entre em contato diretamente através do seguinte canal:\n\n👉 ${contact || 'contato@empresa.com'}\n\n(Esta vitrine serve para facilitar o contato direto entre candidatos e recrutadores).`);
         }
         
         if (e.target.id === 'btn-reset-jobs-filters') {
@@ -1646,6 +1710,330 @@ function renderJobs() {
   }
 
   render();
+}
+
+// Função para renderizar o Formulário de Anúncio de Vagas Multi-Etapas para Empresas
+function renderAnnounceJob() {
+  updateSEO(
+    'Anuncie sua Vaga de Emprego',
+    'Cadastre vagas de emprego no portal Sobre o Povo e encontre profissionais em Rondonópolis, Cuiabá e todo Mato Grosso.',
+    null,
+    '#/anunciar-vaga',
+    'website'
+  );
+
+  let stepData = {
+    recruiterName: '',
+    recruiterRole: '',
+    recruiterContact: '',
+    photoDataUrl: ''
+  };
+
+  function renderForm() {
+    mainContent.innerHTML = `
+      <div class="jobs-portal-container">
+        
+        <!-- Cabeçalho do Cadastro -->
+        <div class="jobs-header">
+          <div class="jobs-header-info">
+            <h2 class="jobs-header-title">Anuncie sua Vaga de Emprego</h2>
+            <p class="jobs-header-subtitle">Cadastre as oportunidades da sua empresa e encontre talentos locais</p>
+          </div>
+          
+          <!-- Barra de Progresso/Etapas -->
+          <div class="announce-steps-indicator">
+            <div class="step-indicator active" id="step-ind-1">
+              <span class="step-number">1</span>
+              <span class="step-label">Seus Dados</span>
+            </div>
+            <div class="step-line"></div>
+            <div class="step-indicator" id="step-ind-2">
+              <span class="step-number">2</span>
+              <span class="step-label">Dados da Vaga</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="announce-form-card">
+          <form id="announce-job-form" onsubmit="return false;">
+            
+            <!-- ETAPA 1 -->
+            <div class="form-step-section" id="form-step-1">
+              <h3 class="form-section-heading">Passo 1: Informações de Contato</h3>
+              <p class="form-section-description">Insira seus dados profissionais para contato e recebimento de currículos.</p>
+              
+              <div class="form-group">
+                <label class="form-label" for="ann-name">Nome Completo</label>
+                <input type="text" class="form-control" id="ann-name" placeholder="Ex: João Silva" required />
+              </div>
+              
+              <div class="form-group">
+                <label class="form-label" for="ann-role">Seu Cargo na Empresa</label>
+                <input type="text" class="form-control" id="ann-role" placeholder="Ex: Proprietário, RH, Gerente" required />
+              </div>
+              
+              <div class="form-group">
+                <label class="form-label" for="ann-contact">E-mail ou WhatsApp para contato</label>
+                <input type="text" class="form-control" id="ann-contact" placeholder="Ex: rh@empresa.com ou (65) 99999-9999" required />
+                <p class="form-input-help" style="font-size: 0.75rem; color: var(--color-text-light); margin-top: 0.35rem;">Este dado será exibido na vaga para que os candidatos entrem em contato direto.</p>
+              </div>
+              
+              <div class="form-actions" style="display: flex; justify-content: flex-end; margin-top: 2rem;">
+                <button type="button" class="btn-announce-next" id="btn-to-step-2">Avançar para Detalhes da Vaga →</button>
+              </div>
+            </div>
+
+            <!-- ETAPA 2 (Oculta Inicialmente) -->
+            <div class="form-step-section" id="form-step-2" style="display: none;">
+              <h3 class="form-section-heading">Passo 2: Informações da Vaga</h3>
+              <p class="form-section-description">Insira os detalhes do cargo técnico e os requisitos da oportunidade.</p>
+              
+              <div class="form-group row-flex">
+                <div>
+                  <label class="form-label" for="ann-job-title">Título da Vaga</label>
+                  <input type="text" class="form-control" id="ann-job-title" placeholder="Ex: Auxiliar de Vendas" />
+                </div>
+                <div>
+                  <label class="form-label" for="ann-company">Nome da Empresa</label>
+                  <input type="text" class="form-control" id="ann-company" placeholder="Ex: Supermercado Boa Vista" />
+                </div>
+              </div>
+
+              <div class="form-group row-flex">
+                <div>
+                  <label class="form-label" for="ann-city">Cidade da Vaga</label>
+                  <select class="form-control" id="ann-city">
+                    <option value="Cuiabá - MT">Cuiabá - MT</option>
+                    <option value="Várzea Grande - MT">Várzea Grande - MT</option>
+                    <option value="Rondonópolis - MT">Rondonópolis - MT</option>
+                    <option value="Sinop - MT">Sinop - MT</option>
+                    <option value="Sorriso - MT">Sorriso - MT</option>
+                    <option value="Outra - MT">Outra cidade (Mato Grosso)</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="form-label" for="ann-type">Regime de Contratação</label>
+                  <select class="form-control" id="ann-type">
+                    <option value="CLT">CLT</option>
+                    <option value="PJ">PJ</option>
+                    <option value="CLT/PJ">CLT / PJ</option>
+                    <option value="Estágio">Estágio</option>
+                    <option value="Temporário">Temporário</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-group row-flex">
+                <div>
+                  <label class="form-label" for="ann-salary">Salário oferecido (Opcional)</label>
+                  <input type="text" class="form-control" id="ann-salary" placeholder="Ex: R$ 2.000,00 ou A combinar" />
+                </div>
+                <div>
+                  <label class="form-label" for="ann-benefits">Benefícios (VT, VR, etc.)</label>
+                  <input type="text" class="form-control" id="ann-benefits" placeholder="Ex: VT + Vale Alimentação" />
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="ann-description">Descrição das atividades e requisitos</label>
+                <textarea class="form-control" id="ann-description" placeholder="Descreva as funções da vaga e o perfil desejado..." style="min-height: 120px; font-family: var(--font-ui); font-size: 0.95rem;"></textarea>
+              </div>
+
+              <!-- Upload de Foto Dinâmico -->
+              <div class="form-group">
+                <label class="form-label">Foto Relacionada à Empresa ou Vaga (Opcional)</label>
+                <div class="announce-photo-upload-wrapper">
+                  <div class="photo-upload-input-box" style="flex: 1;">
+                    <input type="file" id="ann-photo-file" accept="image/*" class="form-control" style="padding: 0.5rem; margin-bottom: 0.5rem;" />
+                    <input type="text" id="ann-photo-url" class="form-control" placeholder="Ou insira a URL de uma foto na internet..." />
+                  </div>
+                  <div class="photo-upload-preview" id="ann-photo-preview">
+                    <div class="preview-placeholder">Foto da Vaga</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-actions row-flex" style="margin-top: 2rem;">
+                <button type="button" class="btn-announce-back" id="btn-back-to-step-1">← Voltar</button>
+                <button type="button" class="btn-announce-submit" id="btn-submit-job">Publicar Vaga de Emprego</button>
+              </div>
+            </div>
+
+          </form>
+        </div>
+
+      </div>
+    `;
+
+    setupFormEvents();
+  }
+
+  function setupFormEvents() {
+    const form = document.getElementById('announce-job-form');
+    const step1 = document.getElementById('form-step-1');
+    const step2 = document.getElementById('form-step-2');
+    const ind1 = document.getElementById('step-ind-1');
+    const ind2 = document.getElementById('step-ind-2');
+
+    // Elementos inputs Passo 1
+    const inName = document.getElementById('ann-name');
+    const inRole = document.getElementById('ann-role');
+    const inContact = document.getElementById('ann-contact');
+
+    // Elementos inputs Passo 2
+    const inJobTitle = document.getElementById('ann-job-title');
+    const inCompany = document.getElementById('ann-company');
+    const inCity = document.getElementById('ann-city');
+    const inType = document.getElementById('ann-type');
+    const inSalary = document.getElementById('ann-salary');
+    const inBenefits = document.getElementById('ann-benefits');
+    const inDescription = document.getElementById('ann-description');
+    
+    // Imagem Upload
+    const inPhotoFile = document.getElementById('ann-photo-file');
+    const inPhotoUrl = document.getElementById('ann-photo-url');
+    const photoPreview = document.getElementById('ann-photo-preview');
+
+    // Botões
+    const btnToStep2 = document.getElementById('btn-to-step-2');
+    const btnBackTo1 = document.getElementById('btn-back-to-step-1');
+    const btnSubmit = document.getElementById('btn-submit-job');
+
+    // Transição 1 -> 2 com validação nativa de Passo 1
+    btnToStep2.addEventListener('click', () => {
+      if (!inName.checkValidity()) {
+        inName.reportValidity();
+        return;
+      }
+      if (!inRole.checkValidity()) {
+        inRole.reportValidity();
+        return;
+      }
+      if (!inContact.checkValidity()) {
+        inContact.reportValidity();
+        return;
+      }
+
+      // Salva dados locais
+      stepData.recruiterName = inName.value.trim();
+      stepData.recruiterRole = inRole.value.trim();
+      stepData.recruiterContact = inContact.value.trim();
+
+      // Troca visual de tela
+      step1.style.display = 'none';
+      step2.style.display = 'block';
+      ind2.classList.add('active');
+      window.scrollTo(0, 0);
+    });
+
+    // Transição 2 -> 1
+    btnBackTo1.addEventListener('click', () => {
+      step2.style.display = 'none';
+      step1.style.display = 'block';
+      ind2.classList.remove('active');
+      window.scrollTo(0, 0);
+    });
+
+    // Preview do upload de imagem (FileReader Base64)
+    if (inPhotoFile) {
+      inPhotoFile.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = (event) => {
+            stepData.photoDataUrl = event.target.result;
+            photoPreview.innerHTML = `<img src="${stepData.photoDataUrl}" alt="Preview" />`;
+            inPhotoUrl.value = ''; // Limpa a URL manual se houver upload
+          };
+          reader.readAsDataURL(file);
+        }
+      });
+    }
+
+    // Preview da URL da foto manual
+    if (inPhotoUrl) {
+      inPhotoUrl.addEventListener('input', (e) => {
+        const url = e.target.value.trim();
+        if (url) {
+          stepData.photoDataUrl = url;
+          photoPreview.innerHTML = `<img src="${url}" alt="Preview" onerror="this.parentNode.innerHTML='<div class=\\'preview-placeholder\\'>Foto Inválida</div>';" />`;
+          inPhotoFile.value = ''; // Limpa upload manual se houver URL
+        } else {
+          stepData.photoDataUrl = '';
+          photoPreview.innerHTML = `<div class="preview-placeholder">Foto da Vaga</div>`;
+        }
+      });
+    }
+
+    // Submissão final do Cadastro
+    btnSubmit.addEventListener('click', () => {
+      if (!inJobTitle.value.trim()) {
+        inJobTitle.required = true;
+        inJobTitle.reportValidity();
+        return;
+      }
+      if (!inCompany.value.trim()) {
+        inCompany.required = true;
+        inCompany.reportValidity();
+        return;
+      }
+      if (!inBenefits.value.trim()) {
+        inBenefits.required = true;
+        inBenefits.reportValidity();
+        return;
+      }
+      if (!inDescription.value.trim()) {
+        inDescription.required = true;
+        inDescription.reportValidity();
+        return;
+      }
+
+      // Cria a vaga com os dados
+      const newJob = {
+        id: 'custom-' + Date.now(),
+        title: inJobTitle.value.trim(),
+        company: inCompany.value.trim(),
+        location: inCity.value,
+        type: inType.value,
+        salary: inSalary.value.trim() || 'A combinar',
+        benefits: inBenefits.value.trim(),
+        description: inDescription.value.trim(),
+        image: stepData.photoDataUrl || 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=400&q=80',
+        contactInfo: `${stepData.recruiterContact} (A/C ${stepData.recruiterName} - ${stepData.recruiterRole})`
+      };
+
+      // Salva no localStorage
+      const customJobs = JSON.parse(localStorage.getItem('custom_jobs_cache') || '[]');
+      customJobs.unshift(newJob);
+      localStorage.setItem('custom_jobs_cache', JSON.stringify(customJobs));
+
+      // Renderiza tela de sucesso
+      renderSuccess(newJob.title);
+    });
+  }
+
+  function renderSuccess(jobTitle) {
+    mainContent.innerHTML = `
+      <div class="jobs-portal-container" style="text-align: center; padding: 4rem 1rem;">
+        <div class="announce-success-card">
+          <div class="success-icon-check">✓</div>
+          <h2 class="success-heading">Vaga Publicada com Sucesso!</h2>
+          <p class="success-message">A oportunidade para <strong>${jobTitle}</strong> já está ativa e visível para todos os candidatos na vitrine do portal Sobre o Povo.</p>
+          <div style="margin-top: 2.5rem; display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+            <a href="#/vagas" class="btn-success-action">Ver Vagas no Portal</a>
+            <a href="#/anunciar-vaga" class="btn-success-action secondary" id="btn-announce-another">Anunciar Outra Vaga</a>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.getElementById('btn-announce-another').addEventListener('click', (e) => {
+      e.preventDefault();
+      renderForm();
+    });
+  }
+
+  renderForm();
 }
 
 // Inicializa o app

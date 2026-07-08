@@ -1665,14 +1665,14 @@ textarea.form-control {
 .jobs-search-wrapper .search-icon, .jobs-select-wrapper .select-icon {
   position: absolute;
   left: 1rem;
-  color: var(--color-text-light);
+  color: var(--text-light);
   font-size: 1.1rem;
   pointer-events: none;
 }
 
 .jobs-search-wrapper input {
   width: 100%;
-  padding: 0.85rem 1rem 0.85rem 2.75rem;
+  padding: 0.85rem 1rem;
   border-radius: var(--radius-sm);
   border: 1.5px solid var(--color-border);
   background-color: var(--color-bg-body);
@@ -1731,7 +1731,8 @@ textarea.form-control {
 
 .whatsapp-icon-bg {
   background-color: rgba(255, 255, 255, 0.15);
-  padding: 1rem;
+  width: 56px;
+  height: 56px;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -2068,5 +2069,314 @@ textarea.form-control {
   .btn-job-apply {
     width: 100%;
     text-align: center;
+  }
+}
+
+/* Card de vaga com estrutura de 2 colunas e imagem */
+.job-card-body-content {
+  display: flex;
+  gap: 1.5rem;
+}
+
+.job-card-image-container {
+  width: 140px;
+  height: 140px;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  flex-shrink: 0;
+  border: 1px solid var(--color-border);
+  box-shadow: 0 2px 8px var(--color-shadow);
+}
+
+.job-card-image-container img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: var(--transition-smooth);
+}
+
+.job-card:hover .job-card-image-container img {
+  transform: scale(1.05);
+}
+
+.job-card-text-details {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+/* Indicador de Passos do Formulário de Anuncio */
+.announce-steps-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1rem;
+  width: 100%;
+}
+
+.step-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  opacity: 0.5;
+  transition: var(--transition-smooth);
+}
+
+.step-indicator.active {
+  opacity: 1;
+}
+
+.step-number {
+  background-color: var(--color-accent-orange);
+  color: #ffffff;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-headings);
+  font-weight: 800;
+  font-size: 0.85rem;
+}
+
+#step-ind-2 .step-number {
+  background-color: var(--color-text-light);
+}
+
+.step-indicator.active #step-ind-2 .step-number,
+.step-indicator.active .step-number {
+  background-color: var(--color-accent-orange);
+}
+
+.step-label {
+  font-family: var(--font-ui);
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--color-text-main);
+}
+
+.step-line {
+  height: 2px;
+  background-color: var(--color-border);
+  width: 60px;
+}
+
+/* Card do Formulário de Anúncio */
+.announce-form-card {
+  background-color: var(--color-bg-card);
+  border-radius: var(--radius-md);
+  padding: 2.5rem;
+  border: 1px solid var(--color-border);
+  box-shadow: 0 10px 30px var(--color-shadow);
+  margin-bottom: 4rem;
+  animation: slideUp 0.4s ease;
+}
+
+.form-section-heading {
+  font-family: var(--font-headings);
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: var(--color-text-main);
+  margin-bottom: 0.35rem;
+}
+
+.form-section-description {
+  font-family: var(--font-ui);
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+  margin-bottom: 2rem;
+}
+
+/* Botões do Formulário de Anúncio */
+.btn-announce-next, .btn-announce-submit {
+  background-color: var(--color-accent-orange);
+  color: #ffffff;
+  border: none;
+  padding: 0.85rem 2rem;
+  font-family: var(--font-ui);
+  font-weight: 700;
+  font-size: 0.95rem;
+  border-radius: 50px;
+  cursor: pointer;
+  transition: var(--transition-bounce);
+  box-shadow: 0 4px 12px rgba(230, 126, 34, 0.2);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+
+.btn-announce-next:hover, .btn-announce-submit:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(230, 126, 34, 0.35);
+  background-color: #d35400;
+  color: #ffffff;
+}
+
+.btn-announce-back {
+  background-color: transparent;
+  border: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+  padding: 0.85rem 2rem;
+  font-family: var(--font-ui);
+  font-weight: 700;
+  font-size: 0.95rem;
+  border-radius: 50px;
+  cursor: pointer;
+  transition: var(--transition-smooth);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-announce-back:hover {
+  background-color: var(--color-bg-body);
+  color: var(--color-text-main);
+}
+
+.announce-photo-upload-wrapper {
+  display: grid;
+  grid-template-columns: 1fr 150px;
+  gap: 1.5rem;
+  align-items: center;
+  background-color: var(--color-bg-body);
+  padding: 1.25rem;
+  border-radius: var(--radius-sm);
+  border: 1px dashed var(--color-border);
+  margin-top: 0.5rem;
+}
+
+.photo-upload-preview {
+  width: 120px;
+  height: 120px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background-color: var(--color-bg-card);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  box-shadow: inset 0 2px 4px var(--color-shadow);
+  justify-self: center;
+}
+
+.photo-upload-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.preview-placeholder {
+  font-family: var(--font-ui);
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--color-text-light);
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Sucesso do Anuncio */
+.announce-success-card {
+  background-color: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 3.5rem 2rem;
+  box-shadow: 0 10px 30px var(--color-shadow);
+  max-width: 650px;
+  margin: 0 auto;
+  animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.success-icon-check {
+  width: 72px;
+  height: 72px;
+  background-color: rgba(39, 174, 96, 0.15);
+  color: #27ae60;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.2rem;
+  font-weight: 900;
+  margin: 0 auto 1.5rem;
+  box-shadow: 0 4px 12px rgba(39, 174, 96, 0.2);
+}
+
+.success-heading {
+  font-family: var(--font-headings);
+  font-size: 1.85rem;
+  font-weight: 900;
+  color: var(--color-text-main);
+  margin-bottom: 0.75rem;
+}
+
+.success-message {
+  font-family: var(--font-ui);
+  font-size: 1.05rem;
+  color: var(--color-text-muted);
+  line-height: 1.6;
+}
+
+.btn-success-action {
+  background-color: var(--color-accent-orange);
+  color: #ffffff;
+  padding: 0.85rem 1.75rem;
+  border-radius: 50px;
+  font-family: var(--font-ui);
+  font-weight: 700;
+  font-size: 0.95rem;
+  transition: var(--transition-bounce);
+  box-shadow: 0 4px 10px rgba(230, 126, 34, 0.2);
+  display: inline-block;
+  text-decoration: none;
+}
+
+.btn-success-action:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(230, 126, 34, 0.35);
+  background-color: #d35400;
+  color: #ffffff;
+}
+
+.btn-success-action.secondary {
+  background-color: transparent;
+  border: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+  box-shadow: none;
+}
+
+.btn-success-action.secondary:hover {
+  background-color: var(--color-bg-body);
+  color: var(--color-text-main);
+}
+
+/* Responsividade adicional para o anúncio e cards de duas colunas */
+@media (max-width: 768px) {
+  .announce-form-card {
+    padding: 1.5rem;
+  }
+  .announce-photo-upload-wrapper {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  .photo-upload-preview {
+    width: 100%;
+    height: 150px;
+  }
+  .btn-announce-next, .btn-announce-back, .btn-announce-submit {
+    width: 100%;
+    text-align: center;
+  }
+  .job-card-body-content {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  .job-card-image-container {
+    width: 100%;
+    height: 160px;
   }
 }

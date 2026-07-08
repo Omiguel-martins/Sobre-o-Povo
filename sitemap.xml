@@ -1,153 +1,54 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <!-- Home Page -->
   <url>
     <loc>https://sobreopovo.com.br/</loc>
-    <lastmod>2026-06-29</lastmod>
-    <changefreq>daily</changefreq>
+    <lastmod>2026-07-08</lastmod>
+    <changefreq>always</changefreq>
     <priority>1.0</priority>
   </url>
+
+  <!-- Categorias Principais (Navegação estruturada) -->
   <url>
     <loc>https://sobreopovo.com.br/#/categoria/Brasil</loc>
-    <lastmod>2026-06-29</lastmod>
+    <lastmod>2026-07-08</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://sobreopovo.com.br/#/categoria/Pol%C3%ADtica</loc>
-    <lastmod>2026-06-29</lastmod>
+    <loc>https://sobreopovo.com.br/#/categoria/Politica</loc>
+    <lastmod>2026-07-08</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://sobreopovo.com.br/#/categoria/Cidades</loc>
-    <lastmod>2026-06-29</lastmod>
+    <lastmod>2026-07-08</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://sobreopovo.com.br/#/categoria/Economia</loc>
-    <lastmod>2026-06-29</lastmod>
+    <lastmod>2026-07-08</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://sobreopovo.com.br/#/categoria/Cultura</loc>
-    <lastmod>2026-06-29</lastmod>
+    <lastmod>2026-07-08</lastmod>
     <changefreq>daily</changefreq>
-    <priority>0.8</priority>
+    <priority>0.7</priority>
   </url>
   <url>
     <loc>https://sobreopovo.com.br/#/categoria/Celebridades</loc>
-    <lastmod>2026-06-29</lastmod>
+    <lastmod>2026-07-08</lastmod>
     <changefreq>daily</changefreq>
-    <priority>0.8</priority>
+    <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://sobreopovo.com.br/#/categoria/Opini%C3%A3o</loc>
-    <lastmod>2026-06-29</lastmod>
+    <loc>https://sobreopovo.com.br/#/categoria/Opiniao</loc>
+    <lastmod>2026-07-08</lastmod>
     <changefreq>daily</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://sobreopovo.com.br/#/noticia/operacao-raleda-mobiliza-policia-civil-contra-faccoes-rivais-em-oito-cidades-de-mt</loc>
-    <lastmod>2026-06-29</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://sobreopovo.com.br/#/noticia/homem-e-preso-em-flagrante-em-rondonopolis-apos-agredir-e-esfaquear-ex-companheira</loc>
-    <lastmod>2026-06-29</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://sobreopovo.com.br/#/noticia/bombeiros-militares-de-mato-grosso-conquistam-4-lugar-em-competicao-nacional-de-resgate</loc>
-    <lastmod>2026-06-29</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://sobreopovo.com.br/#/noticia/defensoria-publica-mt-exonera-subdefensor-geral-investigado-assedio</loc>
-    <lastmod>2026-06-29</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://sobreopovo.com.br/#/noticia/tragedia-no-barbado-acidente-de-moto-tira-a-vida-de-condutor-de-50-anos-em-cuiaba</loc>
-    <lastmod>2026-06-29</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://sobreopovo.com.br/#/noticia/primatas-ameacados-extincao-devolvidos-natureza-alta-floresta</loc>
-    <lastmod>2026-06-29</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://sobreopovo.com.br/#/noticia/forcas-de-seguranca-prendem-quatro-suspeitos-de-violencia-sexual-em-10-dias-em-rondonopolis</loc>
-    <lastmod>2026-06-27</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://sobreopovo.com.br/#/noticia/reatados-virginia-fonseca-e-vini-jr-planejam-viagem-romantica-para-ibiza-apos-a-copa-do-mundo</loc>
-    <lastmod>2026-06-26</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://sobreopovo.com.br/#/noticia/ministerio-publico-determina-transferencia-de-idosos-apos-interdicao-de-abrigo-em-rondonopolis</loc>
-    <lastmod>2026-06-26</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://sobreopovo.com.br/#/noticia/mato-grosso-cria-cadastro-publico-online-com-dados-e-fotos-de-condenados-por-estupro</loc>
-    <lastmod>2026-06-26</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://sobreopovo.com.br/#/noticia/domingo-de-lazer-e-esporte-em-frente-a-prefeitura</loc>
-    <lastmod>2026-06-25</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://sobreopovo.com.br/#/noticia/crise-na-familia-bolsonaro</loc>
-    <lastmod>2026-06-25</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://sobreopovo.com.br/#/noticia/ministerio-do-trabalho-resgata-cinco-pessoas-de-condicoes-analogas-a-escravidao-em-empresa-de-reciclagem-de-rondonopolis</loc>
-    <lastmod>2026-06-24</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://sobreopovo.com.br/#/noticia/crescimento-pib-brasil</loc>
-    <lastmod>2026-06-20</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://sobreopovo.com.br/#/noticia/seja-bem-vindo-ao-sobre-o-povo</loc>
-    <lastmod>2026-06-20</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://sobreopovo.com.br/#/noticia/festival-cultura-periferia</loc>
-    <lastmod>2026-06-20</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://sobreopovo.com.br/#/noticia/investimento-saneamento-basico</loc>
-    <lastmod>2026-06-20</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
+    <priority>0.7</priority>
   </url>
 </urlset>

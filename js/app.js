@@ -297,6 +297,9 @@ function handleRouting() {
   } else if (hash === '#/manager') {
     updateActiveNavLink(null);
     renderManager();
+  } else if (hash === '#/vagas') {
+    updateActiveNavLink('vagas');
+    renderJobs();
   } else {
     mainContent.innerHTML = renderErrorState('Página Não Encontrada', 'A seção que você está procurando não existe.');
   }
@@ -1385,6 +1388,264 @@ function renderAdminDashboard(user) {
 
   updatePreview();
   renderManagerArticlesList();
+}
+
+// Função para renderizar o Portal de Vagas de Emprego
+function renderJobs() {
+  updateSEO(
+    'Portal de Vagas de Emprego MT',
+    'Encontre vagas de emprego e oportunidades de trabalho na Baixada Cuiabana e em todo o estado de Mato Grosso no portal Sobre o Povo.',
+    null,
+    '#/vagas',
+    'website'
+  );
+
+  const mockJobs = [
+    {
+      id: 1,
+      title: 'Assistente Administrativo',
+      company: 'Comércio Varejista Cuiabá',
+      location: 'Cuiabá - MT',
+      type: 'CLT',
+      salary: 'R$ 1.800,00',
+      benefits: 'VT + VR + Plano de Saúde',
+      description: 'Auxílio na rotina administrativa, contas a pagar/receber, emissão de notas fiscais, controle de planilhas e atendimento ao cliente.'
+    },
+    {
+      id: 2,
+      title: 'Desenvolvedor Front-end Júnior',
+      company: 'Tech Solutions MT',
+      location: 'Cuiabá (Híbrido) - MT',
+      type: 'CLT/PJ',
+      salary: 'R$ 3.500,00',
+      benefits: 'VR + Auxílio Home Office',
+      description: 'Desenvolvimento e manutenção de interfaces responsivas utilizando HTML, CSS, JavaScript e React. Integração com APIs.'
+    },
+    {
+      id: 3,
+      title: 'Vendedor de Loja',
+      company: 'Moda & Estilo Várzea Grande',
+      location: 'Várzea Grande - MT',
+      type: 'CLT',
+      salary: 'R$ 1.650,00',
+      benefits: 'Comissão + VT + Seguro de Vida',
+      description: 'Atendimento consultivo ao cliente, organização do salão de vendas, controle de provadores, fechamento de vendas e metas.'
+    },
+    {
+      id: 4,
+      title: 'Auxiliar de Logística',
+      company: 'Distribuidora Rondonópolis',
+      location: 'Rondonópolis - MT',
+      type: 'CLT',
+      salary: 'R$ 1.900,00',
+      benefits: 'Vale Alimentação + VT + Plano de Saúde',
+      description: 'Recebimento, conferência, triagem e estocagem de mercadorias. Preparação de pedidos para expedição e organização do galpão.'
+    },
+    {
+      id: 5,
+      title: 'Estagiário de Marketing Digital',
+      company: 'Agência Sinop Digital',
+      location: 'Sinop - MT',
+      type: 'Estágio',
+      salary: 'R$ 1.000,00',
+      benefits: 'Bolsa Auxílio + Auxílio Transporte',
+      description: 'Criação de conteúdo para redes sociais (posts e stories), redação de copys básicas, monitoramento de métricas e suporte em design.'
+    },
+    {
+      id: 6,
+      title: 'Consultor de Vendas Agro',
+      company: 'NutriAgro Sorriso',
+      location: 'Sorriso - MT',
+      type: 'CLT',
+      salary: 'R$ 4.000,00',
+      benefits: 'Comissões + Carro da Empresa + VR',
+      description: 'Atendimento técnico comercial a produtores rurais, venda de defensivos agrícolas, sementes e fertilizantes, e visitas de campo.'
+    }
+  ];
+
+  let currentSearch = '';
+  let selectedCity = 'Todas';
+
+  function buildJobsHtml() {
+    let filtered = mockJobs;
+
+    if (currentSearch) {
+      const q = currentSearch.toLowerCase();
+      filtered = filtered.filter(j => 
+        j.title.toLowerCase().includes(q) || 
+        j.company.toLowerCase().includes(q) || 
+        j.description.toLowerCase().includes(q)
+      );
+    }
+
+    if (selectedCity && selectedCity !== 'Todas') {
+      filtered = filtered.filter(j => j.location.includes(selectedCity));
+    }
+
+    if (filtered.length === 0) {
+      return `
+        <div class="jobs-no-results">
+          <h3>Nenhuma vaga encontrada 🔍</h3>
+          <p>Tente refinar sua pesquisa ou limpe os filtros para ver todas as oportunidades.</p>
+          <button class="jobs-reset-filters-btn" id="btn-reset-jobs-filters">Ver Todas as Vagas</button>
+        </div>
+      `;
+    }
+
+    return filtered.map(job => `
+      <div class="job-card" data-id="${job.id}">
+        <div class="job-card-header">
+          <div>
+            <h3 class="job-card-title">${job.title}</h3>
+            <div class="job-card-company">${job.company}</div>
+          </div>
+          <span class="job-badge job-badge-${job.type.toLowerCase().replace('/', '')}">${job.type}</span>
+        </div>
+        <div class="job-card-meta">
+          <span class="job-meta-item"><span class="icon">📍</span> ${job.location}</span>
+          <span class="job-meta-item"><span class="icon">💰</span> ${job.salary}</span>
+        </div>
+        <p class="job-card-description">${job.description}</p>
+        <div class="job-card-benefits">
+          <strong>Benefícios:</strong> ${job.benefits}
+        </div>
+        <div class="job-card-footer">
+          <button class="btn-job-apply" data-title="${job.title}" data-company="${job.company}">Candidatar-se</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function render() {
+    mainContent.innerHTML = `
+      <div class="jobs-portal-container">
+        
+        <!-- Cabeçalho Moderno -->
+        <div class="jobs-header">
+          <div class="jobs-header-info">
+            <h2 class="jobs-header-title">Portal de Vagas de Emprego</h2>
+            <p class="jobs-header-subtitle">Encontre sua próxima oportunidade de trabalho em Mato Grosso</p>
+          </div>
+          
+          <!-- Filtro/Busca -->
+          <div class="jobs-filter-bar">
+            <div class="jobs-search-wrapper">
+              <span class="search-icon">🔍</span>
+              <input 
+                type="text" 
+                id="jobs-search-input" 
+                placeholder="Buscar por cargo, palavra-chave ou empresa..." 
+                value="${currentSearch}"
+              />
+            </div>
+            <div class="jobs-select-wrapper">
+              <span class="select-icon">📍</span>
+              <select id="jobs-city-select">
+                <option value="Todas" ${selectedCity === 'Todas' ? 'selected' : ''}>Todas as cidades</option>
+                <option value="Cuiabá" ${selectedCity === 'Cuiabá' ? 'selected' : ''}>Cuiabá</option>
+                <option value="Várzea Grande" ${selectedCity === 'Várzea Grande' ? 'selected' : ''}>Várzea Grande</option>
+                <option value="Rondonópolis" ${selectedCity === 'Rondonópolis' ? 'selected' : ''}>Rondonópolis</option>
+                <option value="Sinop" ${selectedCity === 'Sinop' ? 'selected' : ''}>Sinop</option>
+                <option value="Sorriso" ${selectedCity === 'Sorriso' ? 'selected' : ''}>Sorriso</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- WhatsApp Destaque -->
+        <div class="jobs-whatsapp-card">
+          <div class="whatsapp-card-content">
+            <div class="whatsapp-icon-bg">
+              <svg viewBox="0 0 24 24" width="36" height="36" fill="currentColor">
+                <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.724-1.455L0 24zm6.59-4.846c1.6.95 3.188 1.449 4.825 1.451 5.436.002 9.858-4.419 9.86-9.86.002-2.636-1.019-5.114-2.877-6.973C16.596 1.914 14.12 .89 11.48.889c-5.44 0-9.862 4.418-9.865 9.861-.001 1.693.447 3.34 1.3 4.793l-.999 3.647 3.731-.978zm11.567-7.643c-.307-.154-1.82-.9-2.1-.1-.28.1-.56.408-.686.551-.125.143-.25.215-.558.061-.307-.15-1.3-.479-2.477-1.528-.915-.817-1.533-1.825-1.713-2.132-.18-.307-.019-.473.135-.626.138-.138.307-.36.462-.538.154-.18.206-.307.307-.513.103-.206.051-.385-.026-.538-.077-.154-.686-1.656-.94-2.267-.247-.595-.499-.513-.686-.523-.178-.01-.383-.01-.588-.01-.205 0-.538.077-.82.385-.282.307-1.077 1.051-1.077 2.562 0 1.512 1.097 2.973 1.25 3.178.154.205 2.159 3.299 5.23 4.625.73.315 1.3.504 1.743.645.733.233 1.399.2 1.925.121.587-.087 1.82-.743 2.076-1.46.256-.718.256-1.333.18-1.461-.077-.128-.282-.205-.589-.359z"/>
+              </svg>
+            </div>
+            <div class="whatsapp-card-info">
+              <h3 class="whatsapp-card-title">Grupo de Vagas no WhatsApp</h3>
+              <p class="whatsapp-card-text">Receba novas oportunidades de emprego em Mato Grosso diretamente no seu celular em tempo real.</p>
+            </div>
+          </div>
+          <a href="https://chat.whatsapp.com/placeholder" target="_blank" rel="noopener noreferrer" class="btn-whatsapp-join">
+            Entrar no Grupo →
+          </a>
+        </div>
+
+        <!-- Listagem de Vagas -->
+        <div class="jobs-list-title-container">
+          <h3 class="jobs-section-title">Vagas Disponíveis</h3>
+          <span class="jobs-count-badge" id="jobs-count">0 vagas</span>
+        </div>
+
+        <div class="jobs-grid-list" id="jobs-list-container">
+          ${buildJobsHtml()}
+        </div>
+
+      </div>
+    `;
+
+    updateCount();
+    setupEvents();
+  }
+
+  function updateCount() {
+    let filtered = mockJobs;
+    if (currentSearch) {
+      const q = currentSearch.toLowerCase();
+      filtered = filtered.filter(j => 
+        j.title.toLowerCase().includes(q) || 
+        j.company.toLowerCase().includes(q) || 
+        j.description.toLowerCase().includes(q)
+      );
+    }
+    if (selectedCity && selectedCity !== 'Todas') {
+      filtered = filtered.filter(j => j.location.includes(selectedCity));
+    }
+    const countEl = document.getElementById('jobs-count');
+    if (countEl) {
+      countEl.textContent = `${filtered.length} ${filtered.length === 1 ? 'vaga' : 'vagas'}`;
+    }
+  }
+
+  function setupEvents() {
+    const searchInput = document.getElementById('jobs-search-input');
+    const citySelect = document.getElementById('jobs-city-select');
+    const listContainer = document.getElementById('jobs-list-container');
+
+    if (searchInput) {
+      searchInput.addEventListener('input', (e) => {
+        currentSearch = e.target.value.trim();
+        listContainer.innerHTML = buildJobsHtml();
+        updateCount();
+      });
+    }
+
+    if (citySelect) {
+      citySelect.addEventListener('change', (e) => {
+        selectedCity = e.target.value;
+        listContainer.innerHTML = buildJobsHtml();
+        updateCount();
+      });
+    }
+
+    const container = document.querySelector('.jobs-portal-container');
+    if (container) {
+      container.addEventListener('click', (e) => {
+        if (e.target.classList.contains('btn-job-apply')) {
+          const title = e.target.getAttribute('data-title');
+          const company = e.target.getAttribute('data-company');
+          alert(`Candidatura para a vaga "${title}" na empresa "${company}" enviada com sucesso! (Esta é uma simulação de envio de currículo)`);
+        }
+        
+        if (e.target.id === 'btn-reset-jobs-filters') {
+          currentSearch = '';
+          selectedCity = 'Todas';
+          render();
+        }
+      });
+    }
+  }
+
+  render();
 }
 
 // Inicializa o app

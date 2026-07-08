@@ -434,6 +434,18 @@ function renderHome() {
     });
 
     htmlContent += `
+      <!-- Banner de Destaque de Vagas de Emprego no Topo -->
+      <div class="jobs-highlight-banner">
+        <div class="jobs-highlight-content">
+          <span class="jobs-highlight-badge">NOVO</span>
+          <div class="jobs-highlight-info">
+            <h3 class="jobs-highlight-title">💼 Portal de Vagas de Emprego MT</h3>
+            <p class="jobs-highlight-desc">Encontre oportunidades de trabalho e estágio na Baixada Cuiabana e em todo o estado de Mato Grosso.</p>
+          </div>
+        </div>
+        <a href="#/vagas" class="jobs-highlight-btn">Ver Vagas →</a>
+      </div>
+
       <div class="home-grid">
         <!-- Card Grande da Esquerda (Destaque Principal) -->
         <div class="home-card card-large">

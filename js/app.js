@@ -148,52 +148,32 @@ function updateSEO(title, description, imageUrl, relativeUrl, type = 'website', 
       };
     }
   } else {
-    // Dados estruturados padrão da Home/Organização focado em MT
     ldData = {
       "@context": "https://schema.org",
-      "@type": "NewsMediaOrganization",
+      "@type": "WebSite",
       "name": "Sobre o Povo",
-      "url": "https://sobreopovo.com.br/",
-      "logo": "https://sobreopovo.com.br/assets/logosemfundo.png",
-      "address": {
-        "@type": "PostalAddress",
-        "addressRegion": "MT",
-        "addressCountry": "BR"
-      },
-      "areaServed": [
-        {
-          "@type": "AdministrativeArea",
-          "name": "Mato Grosso"
-        }
-      ],
-      "sameAs": [
-        "https://www.facebook.com/sobreopovomt",
-        "https://www.instagram.com/sobreopovomt"
-      ]
+      "alternateName": "Sobre o Povo Mato Grosso",
+      "url": "https://sobreopovo.com.br/"
     };
   }
 
-  const newScript = document.createElement('script');
-  newScript.type = 'application/ld+json';
-  newScript.id = 'ld-seo';
-  newScript.text = JSON.stringify(ldData, null, 2);
-  document.head.appendChild(newScript);
+  const script = document.createElement('script');
+  script.type = 'application/ld+json';
+  script.id = 'ld-seo';
+  script.text = JSON.stringify(ldData);
+  document.head.appendChild(script);
 }
 
-// Configuração inicial do tema
+// Configuração do Tema Visual (Claro / Escuro)
 function setupTheme() {
   document.documentElement.setAttribute('data-theme', state.theme);
   updateThemeIcon();
 }
 
-// Atualiza o ícone do tema (sol/lua)
+// Atualiza o emoji do botão de alternador de tema
 function updateThemeIcon() {
-  if (state.theme === 'dark') {
-    themeToggleBtn.innerHTML = '☀️';
-    themeToggleBtn.setAttribute('title', 'Mudar para o Modo Claro');
-  } else {
-    themeToggleBtn.innerHTML = '🌙';
-    themeToggleBtn.setAttribute('title', 'Mudar para o Modo Escuro');
+  if (themeToggleBtn) {
+    themeToggleBtn.textContent = state.theme === 'light' ? '🌙' : '☀️';
   }
 }
 
@@ -254,19 +234,47 @@ function setupEventListeners() {
 // Carrega as notícias diretamente da tabela do Supabase
 async function loadNoticiasIndex() {
   try {
+    // 1. Tentar ler do cache localStorage para exibição instantânea (FCP/LCP de 0.2s)
+    const cachedData = localStorage.getItem('noticias_cache');
+    if (cachedData) {
+      try {
+        state.noticias = JSON.parse(cachedData);
+        // Se estivermos em uma rota de listagem, renderiza o cache imediatamente
+        const hash = window.location.hash;
+        if (hash === '' || hash === '#/' || hash.startsWith('#/categoria/')) {
+          renderHome();
+        }
+      } catch (e) {
+        console.warn('Erro ao restaurar cache de notícias:', e);
+      }
+    }
+
+    // 2. Consulta otimizada no Supabase (não seleciona content que contém HTML grande)
     const { data, error } = await supabaseClient
       .from('noticias')
-      .select('*')
+      .select('id, slug, title, summary, category, date, author, image, featured, credits')
       .order('date', { ascending: false });
     
     if (error) throw error;
     state.noticias = data || [];
+
+    // 3. Atualizar o cache local para a próxima inicialização
+    localStorage.setItem('noticias_cache', JSON.stringify(state.noticias));
+
+    // 4. Se a rota atual for listagem, atualiza a tela com os dados mais recentes do banco
+    const hash = window.location.hash;
+    if (hash === '' || hash === '#/' || hash.startsWith('#/categoria/')) {
+      renderHome();
+    }
   } catch (error) {
     console.error('Erro ao buscar as notícias no Supabase:', error);
-    mainContent.innerHTML = renderErrorState(
-      'Erro de Conexão',
-      'Não foi possível carregar as notícias do banco de dados do Supabase. Verifique a tabela.'
-    );
+    // Só exibe estado de erro se o cache estiver vazio e não houver nenhuma notícia carregada
+    if (state.noticias.length === 0) {
+      mainContent.innerHTML = renderErrorState(
+        'Erro de Conexão',
+        'Não foi possível carregar as notícias do portal. Verifique sua conexão com a internet.'
+      );
+    }
   }
 }
 
@@ -429,7 +437,7 @@ function renderHome() {
       <div class="home-grid">
         <!-- Card Grande da Esquerda (Destaque Principal) -->
         <div class="home-card card-large">
-          <div class="card-bg-image" style="background-image: url('${featured.image}')"></div>
+          <img class="card-bg-image" src="${featured.image}" alt="${featured.title}" fetchpriority="high" />
           <div class="card-overlay"></div>
           <div class="card-content">
             <span class="card-category" style="color: ${getCategoryColor(featured.category)}">
@@ -447,7 +455,7 @@ function renderHome() {
         <div class="home-grid-right">
           ${card2 ? `
             <a href="#/noticia/${card2.slug}" class="home-card card-small">
-              <div class="card-bg-image" style="background-image: url('${card2.image}')"></div>
+              <img class="card-bg-image" src="${card2.image}" alt="${card2.title}" loading="lazy" />
               <div class="card-overlay"></div>
               <div class="card-content">
                 <span class="card-category" style="color: ${getCategoryColor(card2.category)}">
@@ -460,7 +468,7 @@ function renderHome() {
           ` : ''}
           ${card3 ? `
             <a href="#/noticia/${card3.slug}" class="home-card card-small">
-              <div class="card-bg-image" style="background-image: url('${card3.image}')"></div>
+              <img class="card-bg-image" src="${card3.image}" alt="${card3.title}" loading="lazy" />
               <div class="card-overlay"></div>
               <div class="card-content">
                 <span class="card-category" style="color: ${getCategoryColor(card3.category)}">
@@ -763,7 +771,7 @@ function renderAdminDashboard(user) {
           <div class="tutorial-title">📖 Como Publicar Matérias no Novo Painel</div>
           <ol class="tutorial-list">
             <li>Insira as informações básicas (Autor, Editoria, Título e Resumo).</li>
-            <li>No campo **Corpo da Matéria**, digite o texto livremente como no Word ou Notion.</li>
+            <li>No campo **Corpo da Matéria**, digite o text livremente como no Word ou Notion.</li>
             <li>**Para formatar o texto:** Use o mouse ou teclado para selecionar qualquer palavra ou trecho do texto. Um menu flutuante aparecerá na hora com opções de **Negrito, Itálico, Sublinhado, Subtítulo, Listas e Links**!</li>
             <li>Escolha se deseja colocar créditos no rodapé e clique em **Publicar Matéria**.</li>
           </ol>

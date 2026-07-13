@@ -7,6 +7,30 @@ const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS
 // Inicializa o cliente do Supabase carregado globalmente no index.html
 const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
+// Engine de Anúncios Dinâmicos (Suporta 'video', 'image' ou 'placeholder')
+const adConfig = {
+  megaTopo: {
+    type: 'video',
+    url: 'https://assets.mixkit.co/videos/preview/mixkit-news-studio-background-40019-large.mp4', // Vídeo de estúdio jornalístico
+    link: 'https://wa.me/5565993044444?text=Olá!%20Gostaria%20de%20anunciar%20no%20espaço%20Mega%20Banner%20Topo%20do%20portal%20Sobre%20o%20Povo.'
+  },
+  intermediario: {
+    type: 'placeholder',
+    url: '',
+    link: 'https://wa.me/5565993044444?text=Olá!%20Gostaria%20de%20anunciar%20no%20espaço%20Full%20Banner%20Intermediário%20do%20portal%20Sobre%20o%20Povo.'
+  },
+  quadradoLateral: {
+    type: 'video',
+    url: 'https://assets.mixkit.co/videos/preview/mixkit-digital-marketing-campaign-on-a-tablet-screen-40763-large.mp4', // Vídeo comercial de marketing
+    link: 'https://wa.me/5565993044444?text=Olá!%20Gostaria%20de%20anunciar%20no%20espaço%20Banner%20Quadrado%20Lateral%20do%20portal%20Sobre%20o%20Povo.'
+  },
+  arranhaceu: {
+    type: 'placeholder',
+    url: '',
+    link: 'https://wa.me/5565993044444?text=Olá!%20Gostaria%20de%20anunciar%20no%20espaço%20Banner%20Arranha-céu%20Lateral%20do%20portal%20Sobre%20o%20Povo.'
+  }
+};
+
 // Estado global da aplicação
 const state = {
   noticias: [],
@@ -53,7 +77,7 @@ function updateSEO(title, description, imageUrl, relativeUrl, type = 'website', 
   const absoluteUrl = `https://sobreopovo.com.br/${relativeUrl}`;
   const finalImage = imageUrl || 'https://sobreopovo.com.br/assets/logosemfundo.png';
 
-  // 1. Atualiza elements DOM na head
+  // 1. Atualiza elementos DOM na head
   document.title = fullTitle;
   
   const metaDesc = document.getElementById('meta-description');
@@ -345,6 +369,110 @@ function updateActiveNavLink(category) {
   });
 }
 
+// Renderiza um espaço de anúncio dinâmico (Vídeo, Imagem ou Placeholder)
+function renderAdSpace(position) {
+  const ad = adConfig[position];
+  if (!ad) return '';
+
+  const whatsappUrl = 'https://wa.me/5565993044444?text=Olá!%20Gostaria%20de%20saber%20mais%20sobre%20os%20espaços%20publicitários%20do%20portal%20Sobre%20o%20Povo.';
+  const linkUrl = ad.link || whatsappUrl;
+
+  if (ad.type === 'video' && ad.url) {
+    let containerClass = '';
+    if (position === 'megaTopo') containerClass = 'ad-mega-banner-topo';
+    else if (position === 'intermediario') containerClass = 'ad-full-banner-intermediario';
+    else if (position === 'quadradoLateral') containerClass = 'ad-banner-square';
+    else if (position === 'arranhaceu') containerClass = 'ad-banner-skyscraper';
+
+    return `
+      <div class="ad-space-box ${containerClass} ad-space-active-media" onclick="window.open('${linkUrl}', '_blank')">
+        <span class="ad-media-badge">PUBLICIDADE</span>
+        <video class="ad-media-video" src="${ad.url}" autoplay loop muted playsinline></video>
+        <div class="ad-media-overlay">
+          <div class="ad-media-overlay-content">
+            <span class="icon">💬</span> Toque para saber mais
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  if (ad.type === 'image' && ad.url) {
+    let containerClass = '';
+    if (position === 'megaTopo') containerClass = 'ad-mega-banner-topo';
+    else if (position === 'intermediario') containerClass = 'ad-full-banner-intermediario';
+    else if (position === 'quadradoLateral') containerClass = 'ad-banner-square';
+    else if (position === 'arranhaceu') containerClass = 'ad-banner-skyscraper';
+
+    return `
+      <div class="ad-space-box ${containerClass} ad-space-active-media" onclick="window.open('${linkUrl}', '_blank')">
+        <span class="ad-media-badge">PUBLICIDADE</span>
+        <img class="ad-media-image" src="${ad.url}" alt="Publicidade" />
+        <div class="ad-media-overlay">
+          <div class="ad-media-overlay-content">
+            <span class="icon">💬</span> Toque para saber mais
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  // Fallback / Placeholder padrão
+  if (position === 'megaTopo') {
+    return `
+      <!-- ESP-4: Mega Banner Topo (970x150) -->
+      <div class="ad-space-box ad-mega-banner-topo">
+        <h3 class="ad-title">ANUNCIE AQUI</h3>
+        <p class="ad-desc">Fale com o portal e coloque sua marca em evidência no topo de Mato Grosso.</p>
+        <a href="${linkUrl}" target="_blank" rel="noopener noreferrer" class="btn-ad-cta">
+          <span class="icon">💬</span> Toque aqui e converse conosco
+        </a>
+      </div>
+    `;
+  }
+
+  if (position === 'intermediario') {
+    return `
+      <!-- ESP-3: Full Banner intermediário home (728X90) -->
+      <div class="ad-space-box ad-full-banner-intermediario">
+        <h3 class="ad-title">ANUNCIE SUA MARCA AQUI</h3>
+        <p class="ad-desc">Espaço publicitário de alta visibilidade no meio da página de notícias.</p>
+        <a href="${linkUrl}" target="_blank" rel="noopener noreferrer" class="btn-ad-cta">
+          <span class="icon">💬</span> Falar com o Comercial
+        </a>
+      </div>
+    `;
+  }
+
+  if (position === 'quadradoLateral') {
+    return `
+      <!-- ESP-1: Banner quadrado lateral (300x250) -->
+      <div class="ad-space-box ad-banner-square">
+        <h3 class="ad-title">ANUNCIE AQUI</h3>
+        <p class="ad-desc">Banner Lateral Quadrado (300x250)</p>
+        <a href="${linkUrl}" target="_blank" rel="noopener noreferrer" class="btn-ad-cta">
+          <span class="icon">💬</span> Conversar Conosco
+        </a>
+      </div>
+    `;
+  }
+
+  if (position === 'arranhaceu') {
+    return `
+      <!-- ESP-2: Banner arranha-céu (300x600) -->
+      <div class="ad-space-box ad-banner-skyscraper">
+        <h3 class="ad-title">ANUNCIE SUA EMPRESA AQUI</h3>
+        <p class="ad-desc">Destaque sua marca na lateral do portal durante a leitura. Banner Arranha-céu (300x600).</p>
+        <a href="${linkUrl}" target="_blank" rel="noopener noreferrer" class="btn-ad-cta">
+          <span class="icon">💬</span> Toque e Anuncie Conosco
+        </a>
+      </div>
+    `;
+  }
+
+  return '';
+}
+
 // Renderiza a Página Inicial (Home) com grid e sidebar
 function renderHome() {
   if (state.noticias.length === 0) {
@@ -463,14 +591,7 @@ function renderHome() {
     const whatsappUrl = 'https://wa.me/5565993044444?text=Olá!%20Gostaria%20de%20saber%20mais%20sobre%20os%20espaços%20publicitários%20do%20portal%20Sobre%20o%20Povo.';
 
     htmlContent += `
-      <!-- ESP-4: Mega Banner Topo (970x150) -->
-      <div class="ad-space-box ad-mega-banner-topo">
-        <h3 class="ad-title">ANUNCIE AQUI</h3>
-        <p class="ad-desc">Fale com o portal e coloque sua marca em evidência no topo de Mato Grosso.</p>
-        <a href="${whatsappUrl}" target="_blank" rel="noopener noreferrer" class="btn-ad-cta">
-          <span class="icon">💬</span> Toque aqui e converse conosco
-        </a>
-      </div>
+      ${renderAdSpace('megaTopo')}
 
       <!-- Banner de Destaque de Vagas de Emprego no Topo -->
       <div class="jobs-highlight-banner" style="margin-bottom: 1rem;">
@@ -546,15 +667,7 @@ function renderHome() {
     `;
 
     // ESP-3: Full Banner intermediário home (728X90)
-    htmlContent += `
-      <div class="ad-space-box ad-full-banner-intermediario">
-        <h3 class="ad-title">ANUNCIE SUA MARCA AQUI</h3>
-        <p class="ad-desc">Espaço publicitário de alta visibilidade no meio da página de notícias.</p>
-        <a href="${whatsappUrl}" target="_blank" rel="noopener noreferrer" class="btn-ad-cta">
-          <span class="icon">💬</span> Falar com o Comercial
-        </a>
-      </div>
-    `;
+    htmlContent += renderAdSpace('intermediario');
 
     // Seção inferior com Leia Mais + Sidebar com anúncios (ESP-1 e ESP-2)
     htmlContent += `
@@ -574,23 +687,8 @@ function renderHome() {
         <aside class="news-sidebar-column">
           <div class="ad-sidebar-wrapper">
             
-            <!-- ESP-1: Banner quadrado lateral (300x250) -->
-            <div class="ad-space-box ad-banner-square">
-              <h3 class="ad-title">ANUNCIE AQUI</h3>
-              <p class="ad-desc">Banner Lateral Quadrado (300x250)</p>
-              <a href="${whatsappUrl}" target="_blank" rel="noopener noreferrer" class="btn-ad-cta">
-                <span class="icon">💬</span> Conversar Conosco
-              </a>
-            </div>
-
-            <!-- ESP-2: Banner arranha-céu (300x600) -->
-            <div class="ad-space-box ad-banner-skyscraper">
-              <h3 class="ad-title">ANUNCIE SUA EMPRESA AQUI</h3>
-              <p class="ad-desc">Destaque sua marca na lateral do portal durante a leitura. Banner Arranha-céu (300x600).</p>
-              <a href="${whatsappUrl}" target="_blank" rel="noopener noreferrer" class="btn-ad-cta">
-                <span class="icon">💬</span> Toque e Anuncie Conosco
-              </a>
-            </div>
+            ${renderAdSpace('quadradoLateral')}
+            ${renderAdSpace('arranhaceu')}
 
           </div>
         </aside>
@@ -720,7 +818,7 @@ async function renderArticle(slug) {
       return;
     }
 
-    // Atualiza metadados SEO e JSON-LD NewsArticle para buscadores (SEO Local)
+    // Metadados SEO e JSON-LD NewsArticle para buscadores (SEO Local)
     updateSEO(
       meta.title,
       meta.summary,
@@ -1258,7 +1356,7 @@ function renderAdminDashboard(user) {
     const category = inCategory.value;
     const title = inTitle.value.trim();
     const summary = inSummary.value.trim();
-    const contentHtml = inContent.innerHTML.trim(); // Pega a marção HTML do editor
+    const contentHtml = inContent.innerHTML.trim(); // Pega a marcação HTML do editor
     const featured = inFeatured.checked;
     const slug = slugify(title);
     const credits = hasCredits ? inCredits.value.trim() : null;

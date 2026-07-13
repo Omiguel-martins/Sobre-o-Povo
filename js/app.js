@@ -460,7 +460,18 @@ function renderHome() {
       bulletsHtml += `<li><a href="#/noticia/${bn.slug}">${bn.title}</a></li>`;
     });
 
+    const whatsappUrl = 'https://wa.me/5565993044444?text=Olá!%20Gostaria%20de%20saber%20mais%20sobre%20os%20espaços%20publicitários%20do%20portal%20Sobre%20o%20Povo.';
+
     htmlContent += `
+      <!-- ESP-4: Mega Banner Topo (970x150) -->
+      <div class="ad-space-box ad-mega-banner-topo">
+        <h3 class="ad-title">ANUNCIE AQUI</h3>
+        <p class="ad-desc">Fale com o portal e coloque sua marca em evidência no topo de Mato Grosso.</p>
+        <a href="${whatsappUrl}" target="_blank" rel="noopener noreferrer" class="btn-ad-cta">
+          <span class="icon">💬</span> Toque aqui e converse conosco
+        </a>
+      </div>
+
       <!-- Banner de Destaque de Vagas de Emprego no Topo -->
       <div class="jobs-highlight-banner" style="margin-bottom: 1rem;">
         <div class="jobs-highlight-content">
@@ -534,14 +545,90 @@ function renderHome() {
       </div>
     `;
 
-    if (gridItems.length > 0) {
-      htmlContent += `
-        <h3 class="section-title" style="margin-top: 4rem; margin-bottom: 2rem;">Leia Mais</h3>
-        <div class="news-grid">
-          ${gridItems.map(renderNewsCard).join('')}
+    // ESP-3: Full Banner intermediário home (728X90)
+    htmlContent += `
+      <div class="ad-space-box ad-full-banner-intermediario">
+        <h3 class="ad-title">ANUNCIE SUA MARCA AQUI</h3>
+        <p class="ad-desc">Espaço publicitário de alta visibilidade no meio da página de notícias.</p>
+        <a href="${whatsappUrl}" target="_blank" rel="noopener noreferrer" class="btn-ad-cta">
+          <span class="icon">💬</span> Falar com o Comercial
+        </a>
+      </div>
+    `;
+
+    // Seção inferior com Leia Mais + Sidebar com anúncios (ESP-1 e ESP-2)
+    htmlContent += `
+      <div class="home-lower-layout">
+        
+        <!-- Coluna de Notícias Principal -->
+        <div class="news-main-column">
+          <h3 class="section-title" style="margin-bottom: 2rem;">Leia Mais</h3>
+          ${gridItems.length > 0 ? `
+            <div class="news-grid" style="margin-top: 0;">
+              ${gridItems.map(renderNewsCard).join('')}
+            </div>
+          ` : '<p style="color: var(--color-text-muted);">Não há notícias adicionais cadastradas.</p>'}
         </div>
-      `;
-    }
+
+        <!-- Coluna Lateral (Sidebar de Anúncios) -->
+        <aside class="news-sidebar-column">
+          <div class="ad-sidebar-wrapper">
+            
+            <!-- ESP-1: Banner quadrado lateral (300x250) -->
+            <div class="ad-space-box ad-banner-square">
+              <h3 class="ad-title">ANUNCIE AQUI</h3>
+              <p class="ad-desc">Banner Lateral Quadrado (300x250)</p>
+              <a href="${whatsappUrl}" target="_blank" rel="noopener noreferrer" class="btn-ad-cta">
+                <span class="icon">💬</span> Conversar Conosco
+              </a>
+            </div>
+
+            <!-- ESP-2: Banner arranha-céu (300x600) -->
+            <div class="ad-space-box ad-banner-skyscraper">
+              <h3 class="ad-title">ANUNCIE SUA EMPRESA AQUI</h3>
+              <p class="ad-desc">Destaque sua marca na lateral do portal durante a leitura. Banner Arranha-céu (300x600).</p>
+              <a href="${whatsappUrl}" target="_blank" rel="noopener noreferrer" class="btn-ad-cta">
+                <span class="icon">💬</span> Toque e Anuncie Conosco
+              </a>
+            </div>
+
+          </div>
+        </aside>
+
+      </div>
+    `;
+
+    // ESP-5: Vídeos (home do site) - Seção de publicidade em vídeo no final
+    htmlContent += `
+      <section class="video-ad-section">
+        <div class="video-ad-container">
+          
+          <!-- Mockup de Player de Vídeo -->
+          <div class="video-player-mockup">
+            <span class="video-mockup-badge">PUBLICIDADE</span>
+            <div class="video-player-overlay"></div>
+            <div class="video-play-btn-circle" onclick="window.open('${whatsappUrl}', '_blank')">▶</div>
+            <div class="video-mockup-footer">
+              <span class="video-mockup-title">Seu Vídeo Institucional Aqui</span>
+              <span class="video-mockup-duration">0:30 / 1:00</span>
+            </div>
+          </div>
+
+          <!-- Texto e CTA comercial -->
+          <div class="video-ad-info">
+            <span class="video-ad-badge">ESPAÇO DE VÍDEO</span>
+            <h3 class="video-ad-heading">Divulgue seus vídeos promocionais ou comerciais no nosso portal</h3>
+            <p class="video-ad-text">Insira seu vídeo de campanha, comercial de TV ou vídeo institucional diretamente na página principal e converse com o nosso público de forma muito mais dinâmica e interativa.</p>
+            <div style="margin-top: 0.5rem;">
+              <a href="${whatsappUrl}" target="_blank" rel="noopener noreferrer" class="btn-ad-cta" style="font-size: 0.95rem; padding: 0.7rem 1.5rem;">
+                <span class="icon">💬</span> Anuncie seu Vídeo Comercial
+              </a>
+            </div>
+          </div>
+
+        </div>
+      </section>
+    `;
   }
 
   mainContent.innerHTML = htmlContent;
@@ -950,7 +1037,7 @@ function renderAdminDashboard(user) {
             <img class="article-hero-img" id="prev-image" src="https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=1200&q=80" alt="Capa" style="margin-bottom: 1.5rem;" />
 
             <div class="article-body" id="prev-body">
-              <p>O corpo da notícia redigido no editor aparecerá formatado aqui in tempo real.</p>
+              <p>O corpo da notícia redigido no editor aparecerá formatado aqui em tempo real.</p>
             </div>
             
             <footer class="article-credits-box" id="prev-credits-box" style="display: none; margin-top: 2rem;">

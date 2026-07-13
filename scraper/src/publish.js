@@ -15,30 +15,73 @@ export function createSupabaseClient() {
   return createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 }
 
+const STOP_WORDS = new Set(['de', 'o', 'a', 'e', 'em', 'do', 'da', 'no', 'na', 'para', 'com', 'por', 'um', 'uma', 'os', 'as', 'se', 'ao', 'aos', 'sobre']);
+
+function getKeywords(title) {
+  if (!title) return new Set();
+  const words = title.toLowerCase().match(/\w+/g) || [];
+  return new Set(words.filter(w => !STOP_WORDS.has(w) && w.length > 2));
+}
+
+function calculateJaccard(title1, title2) {
+  const w1 = getKeywords(title1);
+  const w2 = getKeywords(title2);
+  if (w1.size === 0 || w2.size === 0) return 0;
+  
+  const intersection = new Set([...w1].filter(x => w2.has(x)));
+  const union = new Set([...w1, ...w2]);
+  
+  return intersection.size / union.size;
+}
+
 // ─────────────────────────────────────────────
 // Verifica se a notícia já existe no banco
-// pelo slug ou pela URL de origem
+// pelo slug, pela URL de origem ou por título
+// altamente similar (últimas 48 horas)
 // ─────────────────────────────────────────────
-export async function isDuplicate(supabase, slug, sourceUrl) {
-  // Checa por slug
-  if (slug) {
-    const { data: bySlug } = await supabase
-      .from('noticias')
-      .select('id')
-      .eq('slug', slug)
-      .maybeSingle();
-
-    if (bySlug) return true;
-  }
-
-  // Checa por URL de origem (campo credits contém a URL original)
-  const { data: bySource } = await supabase
+export async function isDuplicate(supabase, slug, sourceUrl, title) {
+  // 1. Checa por slug exato
+  const { data: bySlug } = await supabase
     .from('noticias')
     .select('id')
-    .ilike('credits', `%${sourceUrl}%`)
+    .eq('slug', slug)
     .maybeSingle();
 
-  return !!bySource;
+  if (bySlug) return true;
+
+  // 2. Checa por URL de origem (campo credits contém a URL original)
+  if (sourceUrl) {
+    const { data: bySource } = await supabase
+      .from('noticias')
+      .select('id')
+      .ilike('credits', `%${sourceUrl}%`)
+      .maybeSingle();
+
+    if (bySource) return true;
+  }
+
+  // 3. Checa similaridade de títulos nas últimas 48 horas (mesmo fato cobrado por portais diferentes)
+  if (title) {
+    const twoDaysAgo = new Date();
+    twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
+    
+    const { data: recentNews } = await supabase
+      .from('noticias')
+      .select('title')
+      .gte('date', twoDaysAgo.toISOString());
+
+    if (recentNews) {
+      for (const recent of recentNews) {
+        const similarity = calculateJaccard(title, recent.title);
+        if (similarity > 0.70) { // Bloqueia com mais de 70% de palavras-chave compartilhadas
+          console.log(`  ⚠️  Bloqueado por alta similaridade (${Math.round(similarity * 100)}%) com matéria existente: "${recent.title}"`);
+          return true;
+        }
+      }
+    }
+  }
+
+  return false;
 }
 
 // ─────────────────────────────────────────────
@@ -143,8 +186,8 @@ export async function publishArticles(rewrittenArticles, dryRun = false) {
     console.log(`\n  📰 Processando: "${article.title.slice(0, 70)}..."`);
 
     try {
-      // 1. Verificar duplicidade (slug já gerado)
-      const duplicate = await isDuplicate(supabase, article.slug, article.sourceUrl);
+      // 1. Verificar duplicidade
+      const duplicate = await isDuplicate(supabase, article.slug, article.sourceUrl, article.title);
       if (duplicate) {
         console.log(`  ⏭️  Já publicado. Pulando.`);
         stats.skipped++;

@@ -53,7 +53,7 @@ function updateSEO(title, description, imageUrl, relativeUrl, type = 'website', 
   const absoluteUrl = `https://sobreopovo.com.br/${relativeUrl}`;
   const finalImage = imageUrl || 'https://sobreopovo.com.br/assets/logosemfundo.png';
 
-  // 1. Atualiza elementos DOM na head
+  // 1. Atualiza elements DOM na head
   document.title = fullTitle;
   
   const metaDesc = document.getElementById('meta-description');
@@ -1258,10 +1258,50 @@ function renderAdminDashboard(user) {
     const category = inCategory.value;
     const title = inTitle.value.trim();
     const summary = inSummary.value.trim();
-    const contentHtml = inContent.innerHTML.trim(); // Pega a marcação HTML do editor
+    const contentHtml = inContent.innerHTML.trim(); // Pega a marção HTML do editor
     const featured = inFeatured.checked;
     const slug = slugify(title);
     const credits = hasCredits ? inCredits.value.trim() : null;
+
+    // Validação anti-duplicidade em tempo real (Jaccard similarity de palavras significativas)
+    const STOP_WORDS = new Set(['de', 'o', 'a', 'e', 'em', 'do', 'da', 'no', 'na', 'para', 'com', 'por', 'um', 'uma', 'os', 'as', 'se', 'ao', 'aos', 'sobre']);
+    const getKeywords = (t) => {
+      if (!t) return new Set();
+      const words = t.toLowerCase().match(/\w+/g) || [];
+      return new Set(words.filter(w => !STOP_WORDS.has(w) && w.length > 2));
+    };
+    const calculateJaccard = (t1, t2) => {
+      const w1 = getKeywords(t1);
+      const w2 = getKeywords(t2);
+      if (w1.size === 0 || w2.size === 0) return 0;
+      const intersection = new Set([...w1].filter(x => w2.has(x)));
+      const union = new Set([...w1, ...w2]);
+      return intersection.size / union.size;
+    };
+
+    let isSimilar = false;
+    let similarTitle = '';
+    
+    for (const noticia of state.noticias) {
+      // Ignora se for a própria notícia sendo editada
+      if (state.editingId && noticia.id === state.editingId) continue;
+      
+      const sim = calculateJaccard(title, noticia.title);
+      if (sim > 0.75) { // Limiar de 75% de similaridade
+        isSimilar = true;
+        similarTitle = noticia.title;
+        break;
+      }
+    }
+
+    if (isSimilar) {
+      const confirmPublication = confirm(`Aviso de Duplicidade ⚠️\n\nUma notícia muito semelhante com o título:\n"${similarTitle}"\njá foi publicada no portal.\n\nDeseja forçar a publicação desta nova matéria mesmo assim?`);
+      if (!confirmPublication) {
+        btnSubmit.disabled = false;
+        btnSubmit.textContent = state.editingId ? 'Salvar Alterações' : 'Publicar Matéria no Portal';
+        return;
+      }
+    }
 
     if (!contentHtml || contentHtml === '<br>') {
       alert('Por favor, escreva o conteúdo do corpo da matéria.');

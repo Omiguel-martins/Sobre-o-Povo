@@ -90,6 +90,20 @@ const PORTALS = [
     articleSelector: '.noticia-title a, .titulo-noticia a, h2 a, .news-title a',
     requiresBrowser: false,
   },
+
+  // ── FONTES REGIONAIS ─────────────────────────────────────────
+  {
+    name: 'Prefeitura de Rondonópolis',
+    url: 'https://www.rondonopolis.mt.gov.br/noticias/',
+    articleSelector: '.post-title a',
+    requiresBrowser: false,
+  },
+  {
+    name: 'A Tribuna MT',
+    url: 'https://www.atribunamt.com.br/',
+    articleSelector: 'h3 a',
+    requiresBrowser: false,
+  },
 ];
 
 const MAX_ARTICLES_PER_PORTAL = 15;

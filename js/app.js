@@ -10,8 +10,8 @@ const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 // Engine de Anúncios Dinâmicos (Suporta 'video', 'image' ou 'placeholder')
 const adConfig = {
   megaTopo: {
-    type: 'video',
-    url: 'https://assets.mixkit.co/videos/preview/mixkit-news-studio-background-40019-large.mp4', // Vídeo de estúdio jornalístico
+    type: 'placeholder',
+    url: '',
     link: 'https://wa.me/5565993044444?text=Olá!%20Gostaria%20de%20anunciar%20no%20espaço%20Mega%20Banner%20Topo%20do%20portal%20Sobre%20o%20Povo.'
   },
   intermediario: {
@@ -20,8 +20,8 @@ const adConfig = {
     link: 'https://wa.me/5565993044444?text=Olá!%20Gostaria%20de%20anunciar%20no%20espaço%20Full%20Banner%20Intermediário%20do%20portal%20Sobre%20o%20Povo.'
   },
   quadradoLateral: {
-    type: 'video',
-    url: 'https://assets.mixkit.co/videos/preview/mixkit-digital-marketing-campaign-on-a-tablet-screen-40763-large.mp4', // Vídeo comercial de marketing
+    type: 'placeholder',
+    url: '',
     link: 'https://wa.me/5565993044444?text=Olá!%20Gostaria%20de%20anunciar%20no%20espaço%20Banner%20Quadrado%20Lateral%20do%20portal%20Sobre%20o%20Povo.'
   },
   arranhaceu: {
@@ -423,9 +423,9 @@ function renderAdSpace(position) {
       <!-- ESP-4: Mega Banner Topo (970x150) -->
       <div class="ad-space-box ad-mega-banner-topo">
         <h3 class="ad-title">ANUNCIE AQUI</h3>
-        <p class="ad-desc">Fale com o portal e coloque sua marca em evidência no topo de Mato Grosso.</p>
+        <p class="ad-desc">Coloque sua marca em evidência no topo do portal de Mato Grosso.</p>
         <a href="${linkUrl}" target="_blank" rel="noopener noreferrer" class="btn-ad-cta">
-          <span class="icon">💬</span> Toque aqui e converse conosco
+          <span class="icon">💬</span> Toque no botão abaixo e converse conosco
         </a>
       </div>
     `;
@@ -435,10 +435,10 @@ function renderAdSpace(position) {
     return `
       <!-- ESP-3: Full Banner intermediário home (728X90) -->
       <div class="ad-space-box ad-full-banner-intermediario">
-        <h3 class="ad-title">ANUNCIE SUA MARCA AQUI</h3>
-        <p class="ad-desc">Espaço publicitário de alta visibilidade no meio da página de notícias.</p>
+        <h3 class="ad-title">ANUNCIE AQUI</h3>
+        <p class="ad-desc">Espaço publicitário de alta visibilidade no meio das notícias de Mato Grosso.</p>
         <a href="${linkUrl}" target="_blank" rel="noopener noreferrer" class="btn-ad-cta">
-          <span class="icon">💬</span> Falar com o Comercial
+          <span class="icon">💬</span> Toque no botão abaixo e converse conosco
         </a>
       </div>
     `;
@@ -449,9 +449,9 @@ function renderAdSpace(position) {
       <!-- ESP-1: Banner quadrado lateral (300x250) -->
       <div class="ad-space-box ad-banner-square">
         <h3 class="ad-title">ANUNCIE AQUI</h3>
-        <p class="ad-desc">Banner Lateral Quadrado (300x250)</p>
+        <p class="ad-desc">Banner Lateral Quadrado (300x250) - Destaque para seu negócio.</p>
         <a href="${linkUrl}" target="_blank" rel="noopener noreferrer" class="btn-ad-cta">
-          <span class="icon">💬</span> Conversar Conosco
+          <span class="icon">💬</span> Toque no botão abaixo e converse conosco
         </a>
       </div>
     `;
@@ -461,10 +461,10 @@ function renderAdSpace(position) {
     return `
       <!-- ESP-2: Banner arranha-céu (300x600) -->
       <div class="ad-space-box ad-banner-skyscraper">
-        <h3 class="ad-title">ANUNCIE SUA EMPRESA AQUI</h3>
-        <p class="ad-desc">Destaque sua marca na lateral do portal durante a leitura. Banner Arranha-céu (300x600).</p>
+        <h3 class="ad-title">ANUNCIE AQUI</h3>
+        <p class="ad-desc">Destaque sua empresa na lateral do portal durante a leitura. Banner Arranha-céu (300x600).</p>
         <a href="${linkUrl}" target="_blank" rel="noopener noreferrer" class="btn-ad-cta">
-          <span class="icon">💬</span> Toque e Anuncie Conosco
+          <span class="icon">💬</span> Toque no botão abaixo e converse conosco
         </a>
       </div>
     `;

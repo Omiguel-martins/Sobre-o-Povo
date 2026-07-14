@@ -10,9 +10,9 @@ const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 // Engine de Anúncios Dinâmicos (Suporta 'video', 'image' ou 'placeholder')
 const adConfig = {
   megaTopo: {
-    type: 'placeholder',
-    url: '',
-    link: 'https://wa.me/5565993044444?text=Olá!%20Gostaria%20de%20anunciar%20no%20espaço%20Mega%20Banner%20Topo%20do%20portal%20Sobre%20o%20Povo.'
+    type: 'image',
+    url: './assets/Prefeitura.gif',
+    link: 'https://www.rondonopolis.mt.gov.br/'
   },
   intermediario: {
     type: 'placeholder',
@@ -818,7 +818,7 @@ async function renderArticle(slug) {
       return;
     }
 
-    // Metadados SEO e JSON-LD NewsArticle para buscadores (SEO Local)
+    // Atualiza metadados SEO e JSON-LD NewsArticle para buscadores (SEO Local)
     updateSEO(
       meta.title,
       meta.summary,
@@ -985,8 +985,8 @@ function renderLoginForm() {
 
 // Exibe o painel administrativo completo para o usuário autenticado
 function renderAdminDashboard(user) {
+  // Menu Flutuante de Formatação de Texto Rico
   mainContent.innerHTML = `
-    <!-- Menu Flutuante de Formatação de Texto Rico -->
     <div class="floating-toolbar" id="floating-toolbar">
       <button type="button" id="btn-bold" title="Negrito"><b>B</b></button>
       <button type="button" id="btn-italic" title="Itálico"><i>I</i></button>
@@ -1356,7 +1356,7 @@ function renderAdminDashboard(user) {
     const category = inCategory.value;
     const title = inTitle.value.trim();
     const summary = inSummary.value.trim();
-    const contentHtml = inContent.innerHTML.trim(); // Pega a marcação HTML do editor
+    const contentHtml = inContent.innerHTML.trim();
     const featured = inFeatured.checked;
     const slug = slugify(title);
     const credits = hasCredits ? inCredits.value.trim() : null;
@@ -1385,7 +1385,7 @@ function renderAdminDashboard(user) {
       if (state.editingId && noticia.id === state.editingId) continue;
       
       const sim = calculateJaccard(title, noticia.title);
-      if (sim > 0.75) { // Limiar de 75% de similaridade
+      if (sim > 0.75) {
         isSimilar = true;
         similarTitle = noticia.title;
         break;
@@ -1504,7 +1504,7 @@ function renderAdminDashboard(user) {
       inContent.innerHTML = '';
       inFeatured.checked = false;
       inCredits.value = '';
-      btnCreditsNo.click(); // Volta a opção de créditos para não
+      btnCreditsNo.click();
       
       updatePreview();
       
@@ -1623,7 +1623,7 @@ function renderAdminDashboard(user) {
           inTitle.value = noticia.title;
           inSummary.value = noticia.summary;
           inImageUrl.value = noticia.image || '';
-          inImageFile.value = ''; // Não pode preencher input file por segurança
+          inImageFile.value = '';
           inContent.innerHTML = noticia.content || '';
           inFeatured.checked = noticia.featured === true;
           
@@ -2000,7 +2000,7 @@ function renderAnnounceJob() {
               <div class="form-group">
                 <label class="form-label" for="ann-contact">E-mail ou WhatsApp para contato</label>
                 <input type="text" class="form-control" id="ann-contact" placeholder="Ex: rh@empresa.com ou (65) 99999-9999" required />
-                <p class="form-input-help" style="font-size: 0.75rem; color: var(--color-text-light); margin-top: 0.35rem;">Este dado será exibido na vaga para que os candidatos entrem em contato direto.</p>
+                <p class="form-input-help" style="font-size: 0.75rem; color: var(--color-text-light); margin-top: 0.35rem;">Este dato será exibido na vaga para que os candidatos entrem em contato direto.</p>
               </div>
               
               <div class="form-actions" style="display: flex; justify-content: flex-end; margin-top: 2rem;">

@@ -11,7 +11,7 @@ const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 const adConfig = {
   megaTopo: {
     type: 'image',
-    url: './assets/Prefeitura.gif',
+    url: 'https://i.ibb.co/x9SFXPW/2ca3493c0dc1.gif',
     link: 'https://www.rondonopolis.mt.gov.br/'
   },
   intermediario: {
@@ -486,7 +486,7 @@ function renderHome() {
   let htmlContent = '';
   let filteredNoticias = [...state.noticias];
   
-  // Atualiza SEO da Home ou Categoria
+  // Update SEO da Home ou Categoria
   if (state.currentCategory) {
     updateSEO(
       `Notícias de ${state.currentCategory}`,
@@ -818,7 +818,7 @@ async function renderArticle(slug) {
       return;
     }
 
-    // Atualiza metadados SEO e JSON-LD NewsArticle para buscadores (SEO Local)
+    // Update metadados SEO e JSON-LD NewsArticle para buscadores (SEO Local)
     updateSEO(
       meta.title,
       meta.summary,
@@ -1135,7 +1135,7 @@ function renderAdminDashboard(user) {
             <img class="article-hero-img" id="prev-image" src="https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=1200&q=80" alt="Capa" style="margin-bottom: 1.5rem;" />
 
             <div class="article-body" id="prev-body">
-              <p>O corpo da notícia redigido no editor aparecerá formatado aqui em tempo real.</p>
+              <p>O corpo da notícia redigido no editor aparecerá formatado aqui in tempo real.</p>
             </div>
             
             <footer class="article-credits-box" id="prev-credits-box" style="display: none; margin-top: 2rem;">

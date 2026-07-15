@@ -1,21 +1,15 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import slugify from 'slugify';
 
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+// Obtém a pool de chaves do Gemini (suporta múltiplas chaves separadas por vírgula)
+const getApiKeyPool = () => {
+  const raw = process.env.GEMINI_API_KEY;
+  if (!raw) return [];
+  return raw.split(',').map(k => k.trim()).filter(Boolean);
+};
 
 // Categorias suportadas pelo portal
 const VALID_CATEGORIES = ['Brasil', 'Política', 'Cidades', 'Economia', 'Cultura', 'Celebridades', 'Opinião'];
-
-// ─────────────────────────────────────────────
-// Inicializa o cliente Gemini
-// ─────────────────────────────────────────────
-function createGeminiClient() {
-  if (!GEMINI_API_KEY) {
-    throw new Error('GEMINI_API_KEY não definida nas variáveis de ambiente.');
-  }
-  const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-  return genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
-}
 
 // ─────────────────────────────────────────────
 // Gera um slug seguro e único com timestamp
@@ -155,7 +149,19 @@ export async function rewriteArticles(rawArticles, dryRun = false) {
     }));
   }
 
-  const model = createGeminiClient();
+  const apiKeys = getApiKeyPool();
+  if (apiKeys.length === 0) {
+    throw new Error('GEMINI_API_KEY não definida nas variáveis de ambiente.');
+  }
+
+  let currentKeyIndex = 0;
+  
+  const getModel = (index) => {
+    const genAI = new GoogleGenerativeAI(apiKeys[index]);
+    return genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+  };
+
+  let model = getModel(currentKeyIndex);
   const rewritten = [];
   const DELAY_MS = 55000; // 55 segundos de delay garante segurança máxima contra o limite de 5 RPM do Free Tier
 
@@ -163,17 +169,39 @@ export async function rewriteArticles(rawArticles, dryRun = false) {
     const article = rawArticles[i];
     console.log(`  [${i + 1}/${rawArticles.length}] Reescrevendo: "${article.title.slice(0, 60)}..."`);
 
-    try {
-      const result = await rewriteArticleWithRetry(model, article);
-      rewritten.push(result);
-      console.log(`  ✅ Sucesso — Categoria: ${result.category} | Slug: ${result.slug}`);
-    } catch (err) {
-      console.error(`  ❌ Falha definitiva ao reescrever artigo "${article.title}": ${err.message}`);
-      // Continua para o próximo artigo sem interromper o pipeline
+    let success = false;
+    let attemptsWithKeys = 0;
+
+    while (!success && attemptsWithKeys < apiKeys.length) {
+      try {
+        const result = await rewriteArticleWithRetry(model, article, 2);
+        rewritten.push(result);
+        console.log(`  ✅ Sucesso — Categoria: ${result.category} | Slug: ${result.slug}`);
+        success = true;
+      } catch (err) {
+        const errStr = err.message || '';
+        const isBillingOrKeyError = errStr.includes('403') || errStr.includes('Forbidden') || errStr.toLowerCase().includes('dunning') || errStr.toLowerCase().includes('api key') || errStr.toLowerCase().includes('api_key');
+        const isQuotaError = errStr.includes('429') || errStr.includes('Quota exceeded') || errStr.toLowerCase().includes('too many requests');
+
+        if ((isBillingOrKeyError || isQuotaError) && apiKeys.length > 1) {
+          attemptsWithKeys++;
+          if (attemptsWithKeys < apiKeys.length) {
+            currentKeyIndex = (currentKeyIndex + 1) % apiKeys.length;
+            console.warn(`  ⚠️  Falha com a chave no índice ${currentKeyIndex - 1} (${errStr.slice(0, 100)}...). Rotacionando para a chave reserva no índice ${currentKeyIndex}...`);
+            model = getModel(currentKeyIndex);
+            // Aguarda um pequeno intervalo de 2 segundos antes de tentar novamente com a nova chave
+            await new Promise((r) => setTimeout(r, 2000));
+            continue;
+          }
+        }
+        
+        console.error(`  ❌ Falha definitiva ao reescrever artigo "${article.title}": ${errStr}`);
+        break; // Sai do loop para este artigo se esgotar chaves ou for erro definitivo
+      }
     }
 
-    // Delay preventivo para respeitar o limite de 5 requisições por minuto
-    if (i < rawArticles.length - 1) {
+    // Delay preventivo para respeitar o limite de 5 requisições por minuto da chave ativa atual
+    if (success && i < rawArticles.length - 1) {
       await new Promise((r) => setTimeout(r, DELAY_MS));
     }
   }

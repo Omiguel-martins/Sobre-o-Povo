@@ -386,7 +386,6 @@ function renderAdSpace(position) {
 
     return `
       <div class="ad-space-box ${containerClass} ad-space-active-media" onclick="window.open('${linkUrl}', '_blank')">
-        <span class="ad-media-badge">PUBLICIDADE</span>
         <video class="ad-media-video" src="${ad.url}" autoplay loop muted playsinline></video>
         <div class="ad-media-overlay">
           <div class="ad-media-overlay-content">
@@ -406,7 +405,6 @@ function renderAdSpace(position) {
 
     return `
       <div class="ad-space-box ${containerClass} ad-space-active-media" onclick="window.open('${linkUrl}', '_blank')">
-        <span class="ad-media-badge">PUBLICIDADE</span>
         <img class="ad-media-image" src="${ad.url}" alt="Publicidade" />
         <div class="ad-media-overlay">
           <div class="ad-media-overlay-content">
@@ -486,7 +484,7 @@ function renderHome() {
   let htmlContent = '';
   let filteredNoticias = [...state.noticias];
   
-  // Update SEO da Home ou Categoria
+  // Atualiza SEO da Home ou Categoria
   if (state.currentCategory) {
     updateSEO(
       `Notícias de ${state.currentCategory}`,
@@ -703,7 +701,6 @@ function renderHome() {
           
           <!-- Mockup de Player de Vídeo -->
           <div class="video-player-mockup">
-            <span class="video-mockup-badge">PUBLICIDADE</span>
             <div class="video-player-overlay"></div>
             <div class="video-play-btn-circle" onclick="window.open('${whatsappUrl}', '_blank')">▶</div>
             <div class="video-mockup-footer">
@@ -818,7 +815,7 @@ async function renderArticle(slug) {
       return;
     }
 
-    // Update metadados SEO e JSON-LD NewsArticle para buscadores (SEO Local)
+    // Atualiza metadados SEO e JSON-LD NewsArticle para buscadores (SEO Local)
     updateSEO(
       meta.title,
       meta.summary,
@@ -1135,7 +1132,7 @@ function renderAdminDashboard(user) {
             <img class="article-hero-img" id="prev-image" src="https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=1200&q=80" alt="Capa" style="margin-bottom: 1.5rem;" />
 
             <div class="article-body" id="prev-body">
-              <p>O corpo da notícia redigido no editor aparecerá formatado aqui in tempo real.</p>
+              <p>O corpo da notícia redigido no editor aparecerá formatado aqui em tempo real.</p>
             </div>
             
             <footer class="article-credits-box" id="prev-credits-box" style="display: none; margin-top: 2rem;">
@@ -1623,7 +1620,7 @@ function renderAdminDashboard(user) {
           inTitle.value = noticia.title;
           inSummary.value = noticia.summary;
           inImageUrl.value = noticia.image || '';
-          inImageFile.value = '';
+          inImageFile.value = ''; // Não pode preencher input file por segurança
           inContent.innerHTML = noticia.content || '';
           inFeatured.checked = noticia.featured === true;
           
@@ -2000,7 +1997,7 @@ function renderAnnounceJob() {
               <div class="form-group">
                 <label class="form-label" for="ann-contact">E-mail ou WhatsApp para contato</label>
                 <input type="text" class="form-control" id="ann-contact" placeholder="Ex: rh@empresa.com ou (65) 99999-9999" required />
-                <p class="form-input-help" style="font-size: 0.75rem; color: var(--color-text-light); margin-top: 0.35rem;">Este dato será exibido na vaga para que os candidatos entrem em contato direto.</p>
+                <p class="form-input-help" style="font-size: 0.75rem; color: var(--color-text-light); margin-top: 0.35rem;">Este dado será exibido na vaga para que os candidatos entrem em contato direto.</p>
               </div>
               
               <div class="form-actions" style="display: flex; justify-content: flex-end; margin-top: 2rem;">

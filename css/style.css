@@ -15,7 +15,7 @@
   /* Cores estruturais - Modo Claro (Padrão) */
   --color-bg-body: #f4f6f8;
   --color-bg-card: #ffffff;
-  --color-text-main: #1e293b;
+  --color-text-main: #000000;
   --color-text-muted: #64748b;
   --color-text-light: #94a3b8;
   --color-border: #e2e8f0;
@@ -47,7 +47,7 @@
 [data-theme="dark"] {
   --color-bg-body: #0b0f19;
   --color-bg-card: #131c2e;
-  --color-text-main: #f1f5f9;
+  --color-text-main: #ffffff;
   --color-text-muted: #94a3b8;
   --color-text-light: #64748b;
   --color-border: #1e293b;
@@ -797,6 +797,21 @@ img {
     position: absolute;
     right: 0;
   }
+  
+  .header-search-container {
+    padding: 0.25rem 0 0.75rem 0;
+  }
+  
+  .header-search-container .search-bar {
+    max-width: 100%;
+    padding: 0.4rem 1rem;
+  }
+  
+  .theme-toggle-btn {
+    width: 36px;
+    height: 36px;
+    font-size: 0.95rem;
+  }
 }
 
 .article-subtitle {
@@ -832,9 +847,31 @@ img {
   font-family: var(--font-body);
   font-size: 1.2rem;
   line-height: 1.85;
-  color: var(--color-text-main);
+  color: var(--color-text-main) !important;
   /* Espaçamento confortável para leitura */
   word-spacing: 0.5px;
+}
+
+/* Força a cor correta em parágrafos, spans e outros elementos internos para anular qualquer estilo inline (ex: cor branca fixa herdada no modo claro) */
+.article-body p,
+.article-body span,
+.article-body strong,
+.article-body em,
+.article-body li,
+.article-body h2,
+.article-body h3,
+.article-body h4 {
+  color: var(--color-text-main) !important;
+}
+
+/* Garante que links internos de matérias tenham destaque visual (laranja) e sublinhado */
+.article-body a {
+  color: var(--color-accent-orange) !important;
+  text-decoration: underline !important;
+}
+
+.article-body a:hover {
+  opacity: 0.8;
 }
 
 .article-body p {
@@ -1559,7 +1596,7 @@ textarea.form-control {
   color: #ffffff;
   font-family: var(--font-ui);
   font-weight: 700;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   padding: 0.6rem 1.25rem;
   border-radius: 50px;
   text-decoration: none;

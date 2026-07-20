@@ -1602,11 +1602,22 @@ function renderAdminDashboard(user) {
     // Ouvinte do botão de editar
     const editButtons = listContainer.querySelectorAll('.btn-edit-article');
     editButtons.forEach(btn => {
-      btn.addEventListener('click', (e) => {
+      btn.addEventListener('click', async (e) => {
         const id = btn.getAttribute('data-id');
-        const noticia = state.noticias.find(n => n.id === id);
+        const originalText = btn.textContent;
+        btn.disabled = true;
+        btn.textContent = 'Carregando...';
         
-        if (noticia) {
+        try {
+          // Busca a notícia completa com o campo content no Supabase
+          const { data: noticia, error } = await supabaseClient
+            .from('noticias')
+            .select('*')
+            .eq('id', id)
+            .single();
+            
+          if (error || !noticia) throw error || new Error('Notícia não encontrada');
+          
           state.editingId = noticia.id;
           state.editingSlug = noticia.slug;
           
@@ -1639,6 +1650,12 @@ function renderAdminDashboard(user) {
           if (formCard) {
             window.scrollTo({ top: formCard.offsetTop - 20, behavior: 'smooth' });
           }
+        } catch (err) {
+          console.error('Erro ao carregar corpo da notícia para edição:', err);
+          alert('Erro ao carregar dados da notícia. Tente novamente.');
+        } finally {
+          btn.disabled = false;
+          btn.textContent = originalText;
         }
       });
     });
@@ -2008,7 +2025,7 @@ function renderAnnounceJob() {
             <!-- ETAPA 2 (Oculta Inicialmente) -->
             <div class="form-step-section" id="form-step-2" style="display: none;">
               <h3 class="form-section-heading">Passo 2: Informações da Vaga</h3>
-              <p class="form-section-description">Insira os detalhes do cargo técnico e os requisitos da oportunidade.</p>
+              <p class="form-section-description">Insira os detalhes del cargo técnico e os requisitos da oportunidade.</p>
               
               <div class="form-group row-flex">
                 <div>

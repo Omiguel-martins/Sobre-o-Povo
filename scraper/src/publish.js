@@ -1,9 +1,84 @@
 import { createClient } from '@supabase/supabase-js';
 import axios from 'axios';
+import * as cheerio from 'cheerio';
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY; // Service Key (não a anon key)
 const STORAGE_BUCKET = 'imagens-noticias';
+
+const CONCORRENTES_WATERMARK = [
+  'glbimg.com',
+  'globo.com',
+  'agoramt.com.br',
+  'estadaomatogrosso.com.br',
+  'rdnews.com.br',
+  'olhardireto.com.br',
+  'midianews.com.br',
+  'resumomt.com.br',
+  'folhamax.com.br',
+  'gazetadigital.com.br',
+  'primeirapagina.com.br',
+  'sonoticias.com.br',
+  'cenariomt.com.br'
+];
+
+function hasWatermarkSuspect(imageUrl) {
+  if (!imageUrl) return false;
+  const lowerUrl = imageUrl.toLowerCase();
+  return CONCORRENTES_WATERMARK.some(domain => lowerUrl.includes(domain));
+}
+
+async function searchCleanAlternativeImage(title) {
+  try {
+    console.log(`  🔍 Buscando imagem real sem marca d'água no Google/DDG para: "${title}"...`);
+    const query = encodeURIComponent(`${title} "foto" (site:mt.gov.br OR site:gov.br OR site:leg.br OR site:mp.br)`);
+    const searchUrl = `https://html.duckduckgo.com/html/?q=${query}`;
+    
+    const { data: html } = await axios.get(searchUrl, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      },
+      timeout: 12000
+    });
+
+    const $ = cheerio.load(html);
+    const resultLinks = [];
+
+    $('.result__url').each((_, el) => {
+      let linkText = $(el).text().trim();
+      if (linkText) {
+        if (!linkText.startsWith('http')) {
+          linkText = 'https://' + linkText;
+        }
+        resultLinks.push(linkText);
+      }
+    });
+
+    for (const pageUrl of resultLinks.slice(0, 3)) {
+      try {
+        console.log(`  📥 Inspecionando página pública limpa: ${pageUrl}`);
+        const { data: pageHtml } = await axios.get(pageUrl, {
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          },
+          timeout: 8000
+        });
+        
+        const $page = cheerio.load(pageHtml);
+        const ogImage = $page('meta[property="og:image"]').attr('content') || $page('meta[name="twitter:image"]').attr('content');
+        if (ogImage && ogImage.startsWith('http') && !hasWatermarkSuspect(ogImage)) {
+          console.log(`  ✨ Encontrada imagem real limpa alternativa: ${ogImage}`);
+          return ogImage;
+        }
+      } catch (e) {
+        // Ignora erros de páginas individuais e continua
+      }
+    }
+  } catch (err) {
+    console.error(`  ⚠️ Falha ao pesquisar imagem limpa alternativa: ${err.message}`);
+  }
+  return null;
+}
 
 // ─────────────────────────────────────────────
 // Inicializa o cliente Supabase (Service Role)
@@ -148,7 +223,7 @@ async function insertArticle(supabase, article, publicImageUrl) {
     summary: article.summary,
     category: article.category,
     author: 'Redação',
-    image: publicImageUrl || article.originalImageUrl || null,
+    image: publicImageUrl || null,
     content: article.content,
     featured: false,
     credits: article.credits,
@@ -194,8 +269,21 @@ export async function publishArticles(rewrittenArticles, dryRun = false) {
         continue;
       }
 
-      // 2. Upload da imagem de capa
-      const publicImageUrl = await uploadCoverImage(supabase, article.originalImageUrl, article.slug);
+      // 2. Processar a imagem de capa (Rotas de marcas d'água de concorrentes)
+      let finalImageUrl = article.originalImageUrl;
+      if (hasWatermarkSuspect(finalImageUrl)) {
+        console.log(`  ⚠️ Imagem original suspeita de possuir marca d'água de concorrente: ${finalImageUrl}`);
+        const cleanAlternative = await searchCleanAlternativeImage(article.title);
+        if (cleanAlternative) {
+          finalImageUrl = cleanAlternative;
+        } else {
+          console.log(`  ❌ Nenhuma imagem real limpa alternativa encontrada. Matéria será publicada sem imagem de capa.`);
+          finalImageUrl = null;
+        }
+      }
+
+      // Upload da imagem de capa para o Storage
+      const publicImageUrl = finalImageUrl ? await uploadCoverImage(supabase, finalImageUrl, article.slug) : null;
 
       // 3. Inserir no banco
       await insertArticle(supabase, article, publicImageUrl);

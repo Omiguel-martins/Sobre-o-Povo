@@ -4,8 +4,8 @@
   "description": "Portal de Notícias Sobre o Povo",
   "type": "module",
   "scripts": {
-    "build": "node scripts/build-registry.js && node scripts/generate-sitemap.js",
-    "dev": "node scripts/build-registry.js && node scripts/generate-sitemap.js && vite",
+    "build": "node scripts/build-registry.js && node scripts/prerender.js && node scripts/generate-sitemap.js",
+    "dev": "node scripts/build-registry.js && node scripts/prerender.js && node scripts/generate-sitemap.js && vite",
     "preview": "vite preview"
   },
   "devDependencies": {

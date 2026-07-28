@@ -90,8 +90,6 @@ const PORTALS = [
     articleSelector: '.noticia-title a, .titulo-noticia a, h2 a, .news-title a',
     requiresBrowser: false,
   },
-
-  // ── FONTES REGIONAIS ─────────────────────────────────────────
   {
     name: 'Prefeitura de Rondonópolis',
     url: 'https://www.rondonopolis.mt.gov.br/noticias/',
@@ -171,10 +169,22 @@ async function extractArticleWithAxios(url, sourceName, headers) {
       $('meta[name="description"]').attr('content') ||
       $('p').first().text().trim().slice(0, 300);
 
-    const imageUrl =
+    const rawImageUrl =
       $('meta[property="og:image"]').attr('content') ||
       $('article img').first().attr('src') ||
       null;
+
+    let imageUrl = null;
+    if (rawImageUrl && typeof rawImageUrl === 'string') {
+      const trimmed = rawImageUrl.trim();
+      if (trimmed && trimmed.toLowerCase() !== 'none' && trimmed.toLowerCase() !== 'null') {
+        try {
+          imageUrl = new URL(trimmed, canonical || url).href;
+        } catch (e) {
+          imageUrl = null;
+        }
+      }
+    }
 
     // Extrai o corpo da matéria
     const bodySelectors = [
@@ -298,8 +308,22 @@ async function extractArticleWithBrowser(page, url, sourceName) {
       const summary =
         document.querySelector('meta[property="og:description"]')?.content ||
         document.querySelector('meta[name="description"]')?.content || '';
-      const imageUrl =
-        document.querySelector('meta[property="og:image"]')?.content || null;
+      const rawImageUrl =
+        document.querySelector('meta[property="og:image"]')?.content ||
+        document.querySelector('article img')?.getAttribute('src') ||
+        null;
+
+      let imageUrl = null;
+      if (rawImageUrl && typeof rawImageUrl === 'string') {
+        const trimmed = rawImageUrl.trim();
+        if (trimmed && trimmed.toLowerCase() !== 'none' && trimmed.toLowerCase() !== 'null') {
+          try {
+            imageUrl = new URL(trimmed, canonical || document.URL).href;
+          } catch (e) {
+            imageUrl = null;
+          }
+        }
+      }
 
       const paragraphs = [...document.querySelectorAll('article p, .content p, .entry-content p')]
         .map((p) => p.textContent.trim())

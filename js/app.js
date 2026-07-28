@@ -26,7 +26,7 @@ const adConfig = {
   },
   arranhaceu: {
     type: 'image',
-    url: '/assets/central_agronegocios_arranhaceu.png',
+    url: 'https://wnvpkbddmhnznybvmqam.supabase.co/storage/v1/object/public/imagens-noticias/central_agronegocios_arranhaceu.png',
     link: 'https://wa.me/5566996235026?text=Olá!%20Vim%20pelo%20portal%20Sobre%20o%20Povo%20e%20gostaria%20de%20saber%20mais%20sobre%20as%20soluções%20da%20Central%20Agronegócios%20Ambiental.'
   }
 };

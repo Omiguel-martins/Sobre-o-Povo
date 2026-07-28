@@ -1,54 +1,51 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <!-- Home Page -->
   <url>
     <loc>https://sobreopovo.com.br/</loc>
-    <lastmod>2026-07-08</lastmod>
-    <changefreq>always</changefreq>
+    <lastmod>2026-07-28</lastmod>
+    <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
-
-  <!-- Categorias Principais (Navegação estruturada) -->
   <url>
-    <loc>https://sobreopovo.com.br/#/categoria/Brasil</loc>
-    <lastmod>2026-07-08</lastmod>
+    <loc>https://sobreopovo.com.br/categoria/Brasil</loc>
+    <lastmod>2026-07-28</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://sobreopovo.com.br/#/categoria/Politica</loc>
-    <lastmod>2026-07-08</lastmod>
+    <loc>https://sobreopovo.com.br/categoria/Pol%C3%ADtica</loc>
+    <lastmod>2026-07-28</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://sobreopovo.com.br/#/categoria/Cidades</loc>
-    <lastmod>2026-07-08</lastmod>
+    <loc>https://sobreopovo.com.br/categoria/Cidades</loc>
+    <lastmod>2026-07-28</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://sobreopovo.com.br/#/categoria/Economia</loc>
-    <lastmod>2026-07-08</lastmod>
+    <loc>https://sobreopovo.com.br/categoria/Economia</loc>
+    <lastmod>2026-07-28</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://sobreopovo.com.br/#/categoria/Cultura</loc>
-    <lastmod>2026-07-08</lastmod>
+    <loc>https://sobreopovo.com.br/categoria/Cultura</loc>
+    <lastmod>2026-07-28</lastmod>
     <changefreq>daily</changefreq>
-    <priority>0.7</priority>
+    <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://sobreopovo.com.br/#/categoria/Celebridades</loc>
-    <lastmod>2026-07-08</lastmod>
+    <loc>https://sobreopovo.com.br/categoria/Celebridades</loc>
+    <lastmod>2026-07-28</lastmod>
     <changefreq>daily</changefreq>
-    <priority>0.7</priority>
+    <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://sobreopovo.com.br/#/categoria/Opiniao</loc>
-    <lastmod>2026-07-08</lastmod>
+    <loc>https://sobreopovo.com.br/categoria/Opini%C3%A3o</loc>
+    <lastmod>2026-07-28</lastmod>
     <changefreq>daily</changefreq>
-    <priority>0.7</priority>
+    <priority>0.8</priority>
   </url>
 </urlset>

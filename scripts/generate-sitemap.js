@@ -46,7 +46,7 @@ async function generateSitemap() {
     const categorias = ['Brasil', 'Política', 'Cidades', 'Economia', 'Cultura', 'Celebridades', 'Opinião'];
     categorias.forEach(cat => {
       xml += `  <url>\n`;
-      xml += `    <loc>${BASE_URL}/#/categoria/${encodeURIComponent(cat)}</loc>\n`;
+      xml += `    <loc>${BASE_URL}/categoria/${encodeURIComponent(cat)}</loc>\n`;
       xml += `    <lastmod>${today}</lastmod>\n`;
       xml += `    <changefreq>daily</changefreq>\n`;
       xml += `    <priority>0.8</priority>\n`;
@@ -57,7 +57,7 @@ async function generateSitemap() {
     noticias.forEach(noticia => {
       const itemDate = new Date(noticia.date).toISOString().split('T')[0];
       xml += `  <url>\n`;
-      xml += `    <loc>${BASE_URL}/#/noticia/${noticia.slug}</loc>\n`;
+      xml += `    <loc>${BASE_URL}/noticia/${noticia.slug}</loc>\n`;
       xml += `    <lastmod>${itemDate}</lastmod>\n`;
       xml += `    <changefreq>weekly</changefreq>\n`;
       xml += `    <priority>0.6</priority>\n`;

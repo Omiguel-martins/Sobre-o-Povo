@@ -164,18 +164,24 @@ export async function isDuplicate(supabase, slug, sourceUrl, title) {
 // Retorna a URL pública da imagem
 // ─────────────────────────────────────────────
 async function uploadCoverImage(supabase, imageUrl, slug) {
-  if (!imageUrl) {
-    console.log(`  📷 Sem imagem de capa para: ${slug}. Usando placeholder.`);
+  if (!imageUrl || typeof imageUrl !== 'string') {
+    console.log(`  📷 Sem imagem de capa válida para: ${slug}.`);
+    return null;
+  }
+
+  const cleanUrl = imageUrl.trim();
+  if (cleanUrl.toLowerCase() === 'none' || cleanUrl.toLowerCase() === 'null' || (!cleanUrl.startsWith('http://') && !cleanUrl.startsWith('https://'))) {
+    console.log(`  📷 URL de imagem descartada (não é HTTP/HTTPS): "${cleanUrl}"`);
     return null;
   }
 
   try {
     console.log(`  📥 Baixando imagem de capa...`);
-    const response = await axios.get(imageUrl, {
+    const response = await axios.get(cleanUrl, {
       responseType: 'arraybuffer',
       timeout: 20000,
       headers: {
-        'User-Agent': 'Mozilla/5.0 (compatible; SobreOPovoBot/1.0)',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
       },
     });
 
@@ -198,7 +204,7 @@ async function uploadCoverImage(supabase, imageUrl, slug) {
 
     if (error) {
       console.error(`  ⚠️  Falha no upload da imagem: ${error.message}`);
-      return imageUrl; // Usa a URL original como fallback
+      return cleanUrl; // Usa a URL original como fallback (é HTTP/HTTPS válida)
     }
 
     const { data: publicUrlData } = supabase.storage
@@ -208,8 +214,8 @@ async function uploadCoverImage(supabase, imageUrl, slug) {
     console.log(`  ✅ Imagem enviada ao Supabase Storage.`);
     return publicUrlData.publicUrl;
   } catch (err) {
-    console.error(`  ⚠️  Não foi possível baixar a imagem de ${imageUrl}: ${err.message}`);
-    return imageUrl; // Usa URL original como fallback
+    console.error(`  ⚠️  Não foi possível baixar a imagem de ${cleanUrl}: ${err.message}`);
+    return cleanUrl.startsWith('http') ? cleanUrl : null;
   }
 }
 

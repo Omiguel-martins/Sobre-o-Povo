@@ -25,9 +25,9 @@ const adConfig = {
     link: 'https://wa.me/5565993044444?text=Olá!%20Gostaria%20de%20anunciar%20no%20espaço%20Banner%20Quadrado%20Lateral%20do%20portal%20Sobre%20o%20Povo.'
   },
   arranhaceu: {
-    type: 'placeholder',
-    url: '',
-    link: 'https://wa.me/5565993044444?text=Olá!%20Gostaria%20de%20anunciar%20no%20espaço%20Banner%20Arranha-céu%20Lateral%20do%20portal%20Sobre%20o%20Povo.'
+    type: 'image',
+    url: '/assets/central_agronegocios_arranhaceu.png',
+    link: 'https://wa.me/5566996235026?text=Olá!%20Vim%20pelo%20portal%20Sobre%20o%20Povo%20e%20gostaria%20de%20saber%20mais%20sobre%20as%20soluções%20da%20Central%20Agronegócios%20Ambiental.'
   }
 };
 

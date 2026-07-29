@@ -47,7 +47,7 @@ async function main() {
       process.exit(0);
     }
 
-    // ── FASE DE DEDUPLICAÇÃO PRÉVIA ──────────────────────────────
+    // ── FASE DE DEDUPLICAÇÃO PRÉVIA & LIMITAÇÃO DE COTA ───────────
     let articlesToProcess = [];
     if (isDryRun) {
       // No dry-run simulamos apenas com os primeiros 3 artigos coletados
@@ -104,6 +104,7 @@ async function main() {
     }
     console.log('═══════════════════════════════════════════════════════════\n');
 
+    process.exit(0);
   } catch (err) {
     console.error('\n❌ Erro crítico no pipeline:', err.message);
     console.error(err.stack);

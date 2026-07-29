@@ -7,7 +7,7 @@ const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS
 // Inicializa o cliente do Supabase carregado globalmente no index.html
 const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
-// Engine de Anúncios Dinâmicos (Suporta 'video', 'image' ou 'placeholder')
+// Engine de Anúncios Dinâmicos (Carregados diretamente da tabela 'anuncios' do Supabase)
 const adConfig = {
   megaTopo: {
     type: 'placeholder',
@@ -25,11 +25,40 @@ const adConfig = {
     link: 'https://wa.me/5565993044444?text=Olá!%20Gostaria%20de%20anunciar%20no%20espaço%20Banner%20Quadrado%20Lateral%20do%20portal%20Sobre%20o%20Povo.'
   },
   arranhaceu: {
-    type: 'image',
-    url: 'https://wnvpkbddmhnznybvmqam.supabase.co/storage/v1/object/public/imagens-noticias/central_agronegocios_arranhaceu.jpg',
-    link: 'https://wa.me/5566996235026?text=Olá!%20Vim%20pelo%20portal%20Sobre%20o%20Povo%20e%20gostaria%20de%20saber%20mais%20sobre%20as%20soluções%20da%20Central%20Agronegócios%20Ambiental.'
+    type: 'placeholder',
+    url: '',
+    link: 'https://wa.me/5565993044444?text=Olá!%20Gostaria%20de%20anunciar%20no%20espaço%20Banner%20Arranha-céu%20Lateral%20do%20portal%20Sobre%20o%20Povo.'
   }
 };
+
+// Busca anúncios ativos diretamente da tabela 'anuncios' do Supabase
+async function loadAnunciosFromSupabase() {
+  try {
+    const { data: anuncios, error } = await supabaseClient
+      .from('anuncios')
+      .select('*')
+      .eq('active', true);
+
+    if (error) {
+      console.warn('Aviso: Não foi possível carregar os anúncios do Supabase:', error);
+      return;
+    }
+
+    if (anuncios && anuncios.length > 0) {
+      anuncios.forEach(ad => {
+        if (adConfig[ad.slot]) {
+          adConfig[ad.slot] = {
+            type: ad.type || 'image',
+            url: ad.image_url,
+            link: ad.link_url || 'https://wa.me/5565993044444'
+          };
+        }
+      });
+    }
+  } catch (e) {
+    console.warn('Erro ao carregar anúncios do Supabase:', e);
+  }
+}
 
 // Estado global da aplicação
 const state = {
@@ -55,6 +84,7 @@ async function init() {
   setupTheme();
   updateHeaderDate();
   setupEventListeners();
+  await loadAnunciosFromSupabase();
   await loadNoticiasIndex();
   handleRouting();
 }
@@ -1945,7 +1975,7 @@ function renderJobs() {
           const company = e.target.getAttribute('data-company');
           const contact = e.target.getAttribute('data-contact');
           
-          alert(`Para se candidatar à vaga de "${title}" na empresa "${company}", entre em contato diretamente através do seguinte canal:\n\n👉 ${contact || 'contato@empresa.com'}\n\n(Esta vitrine serve para facilitar o contato direto entre candidatos e recrutadores).`);
+          alert(`Para se candidatar à vaga de "${title}" na empresa "${company}", entre em contato diretamente através do seguinte canal:\n\n👉 ${contact || 'contato@empresa.com'}\n\n(Esta vitrine serve para facilitar o contato direto entre candidatos me recrutadores).`);
         }
         
         if (e.target.id === 'btn-reset-jobs-filters') {

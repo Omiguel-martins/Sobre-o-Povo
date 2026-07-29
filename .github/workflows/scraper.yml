@@ -22,7 +22,7 @@ jobs:
   scraper:
     name: Executar Pipeline de Notícias
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 60
 
     steps:
       - name: ⬇️ Clonar repositório

@@ -83,7 +83,10 @@ async function prerender() {
       const fullTitle = `${article.title} | Sobre o Povo`;
       const description = escapeHtml(article.summary || article.title);
       const articleUrl = `${BASE_URL}/noticia/${article.slug}`;
-      const imageUrl = article.image || `${BASE_URL}/assets/logosemfundo.png`;
+      const rawImg = (article.image && article.image !== 'null' && article.image !== 'undefined' && article.image.trim() !== '')
+        ? article.image
+        : `${BASE_URL}/assets/logosemfundo.png`;
+      const imageUrl = rawImg;
       const categoryColor = getCategoryColor(article.category);
       const formattedDate = formatFriendlyDate(article.date);
 
@@ -111,11 +114,9 @@ async function prerender() {
             </div>
           </header>
 
-          ${article.image ? `
-            <figure class="article-hero-image">
-              <img src="${escapeHtml(article.image)}" alt="${escapeHtml(article.title)}" />
-            </figure>
-          ` : ''}
+          <figure class="article-hero-image">
+            <img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(article.title)}" onerror="this.onerror=null; this.src='/assets/logosemfundo.png';" />
+          </figure>
 
           <div class="article-body">
             ${bodyHtml}

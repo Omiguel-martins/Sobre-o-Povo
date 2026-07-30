@@ -17,6 +17,11 @@ on:
         required: false
         default: 'false'
         type: boolean
+      single_test:
+        description: 'Processar apenas 1 notícia inédita com foto para teste?'
+        required: false
+        default: 'true'
+        type: boolean
 
 jobs:
   scraper:
@@ -50,6 +55,7 @@ jobs:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          SINGLE_TEST: ${{ github.event.inputs.single_test || 'false' }}
         run: npm start
 
       - name: 🧪 Executar pipeline em modo dry-run (acionamento manual)

@@ -8,6 +8,17 @@ const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS
 const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
 // Engine de Anúncios Dinâmicos (Carregados diretamente da tabela 'anuncios' do Supabase)
+const DEFAULT_PORTAL_LOGO = 'https://sobreopovo.com.br/assets/logosemfundo.png';
+
+function getValidNewsImage(imgUrl) {
+  if (!imgUrl || typeof imgUrl !== 'string') return DEFAULT_PORTAL_LOGO;
+  const clean = imgUrl.trim();
+  if (clean === '' || clean.toLowerCase() === 'null' || clean.toLowerCase() === 'undefined' || clean.toLowerCase() === 'none') {
+    return DEFAULT_PORTAL_LOGO;
+  }
+  return clean;
+}
+
 const adConfig = {
   megaTopo: {
     type: 'placeholder',
@@ -106,7 +117,7 @@ function updateSEO(title, description, imageUrl, relativeUrl, type = 'website', 
   const fullTitle = title === 'Sobre o Povo' ? siteName : `${title} | Sobre o Povo`;
   const cleanRelativePath = relativeUrl ? relativeUrl.replace(/^#\//, '') : '';
   const absoluteUrl = cleanRelativePath ? `https://sobreopovo.com.br/${cleanRelativePath}` : 'https://sobreopovo.com.br/';
-  const finalImage = imageUrl || 'https://sobreopovo.com.br/assets/logosemfundo.png';
+  const finalImage = getValidNewsImage(imageUrl);
 
   // 1. Atualiza elementos DOM na head
   document.title = fullTitle;
@@ -657,7 +668,7 @@ function renderHome() {
       <div class="home-grid">
         <!-- Card Grande da Esquerda (Destaque Principal) -->
         <div class="home-card card-large">
-          <img class="card-bg-image" src="${featured.image}" alt="${featured.title}" fetchpriority="high" />
+          <img class="card-bg-image" src="${getValidNewsImage(featured.image)}" alt="${featured.title}" fetchpriority="high" onerror="this.onerror=null; this.src='https://sobreopovo.com.br/assets/logosemfundo.png';" />
           <div class="card-overlay"></div>
           <div class="card-content">
             <span class="card-category" style="color: ${getCategoryColor(featured.category)}">
@@ -675,7 +686,7 @@ function renderHome() {
         <div class="home-grid-right">
           ${card2 ? `
             <a href="#/noticia/${card2.slug}" class="home-card card-small">
-              <img class="card-bg-image" src="${card2.image}" alt="${card2.title}" loading="lazy" />
+              <img class="card-bg-image" src="${getValidNewsImage(card2.image)}" alt="${card2.title}" loading="lazy" onerror="this.onerror=null; this.src='https://sobreopovo.com.br/assets/logosemfundo.png';" />
               <div class="card-overlay"></div>
               <div class="card-content">
                 <span class="card-category" style="color: ${getCategoryColor(card2.category)}">
@@ -688,7 +699,7 @@ function renderHome() {
           ` : ''}
           ${card3 ? `
             <a href="#/noticia/${card3.slug}" class="home-card card-small">
-              <img class="card-bg-image" src="${card3.image}" alt="${card3.title}" loading="lazy" />
+              <img class="card-bg-image" src="${getValidNewsImage(card3.image)}" alt="${card3.title}" loading="lazy" onerror="this.onerror=null; this.src='https://sobreopovo.com.br/assets/logosemfundo.png';" />
               <div class="card-overlay"></div>
               <div class="card-content">
                 <span class="card-category" style="color: ${getCategoryColor(card3.category)}">
@@ -813,10 +824,11 @@ function renderLatestSidebarItem(noticia) {
 
 // Template de Card de Notícia Padrão (Feed Secundário)
 function renderNewsCard(noticia) {
+  const validImg = getValidNewsImage(noticia.image);
   return `
     <article class="news-card">
       <a href="#/noticia/${noticia.slug}" class="news-img-container">
-        <img src="${noticia.image}" alt="${noticia.title}" loading="lazy" />
+        <img src="${validImg}" alt="${noticia.title}" loading="lazy" onerror="this.onerror=null; this.src='https://sobreopovo.com.br/assets/logosemfundo.png';" />
       </a>
       <div class="news-card-content">
         <span class="category-badge" style="background-color: ${getCategoryColor(noticia.category)}">
@@ -854,11 +866,13 @@ async function renderArticle(slug) {
       return;
     }
 
+    const articleImg = getValidNewsImage(meta.image);
+
     // Atualiza metadados SEO e JSON-LD NewsArticle para buscadores (SEO Local)
     updateSEO(
       meta.title,
       meta.summary,
-      meta.image,
+      articleImg,
       `#/noticia/${meta.slug}`,
       'article',
       { date: meta.date, author: meta.author }
@@ -903,7 +917,7 @@ async function renderArticle(slug) {
           </div>
         </header>
 
-        ${meta.image ? `<img class="article-hero-img" src="${meta.image}" alt="${meta.title}" />` : ''}
+        <img class="article-hero-img" src="${articleImg}" alt="${meta.title}" onerror="this.onerror=null; this.src='https://sobreopovo.com.br/assets/logosemfundo.png';" />
 
         <div class="article-body">
           ${bodyHtml}

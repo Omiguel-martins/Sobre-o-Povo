@@ -1,84 +1,10 @@
 import { createClient } from '@supabase/supabase-js';
 import axios from 'axios';
-import * as cheerio from 'cheerio';
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY; // Service Key (não a anon key)
 const STORAGE_BUCKET = 'imagens-noticias';
-
-const CONCORRENTES_WATERMARK = [
-  'glbimg.com',
-  'globo.com',
-  'agoramt.com.br',
-  'estadaomatogrosso.com.br',
-  'rdnews.com.br',
-  'olhardireto.com.br',
-  'midianews.com.br',
-  'resumomt.com.br',
-  'folhamax.com.br',
-  'gazetadigital.com.br',
-  'primeirapagina.com.br',
-  'sonoticias.com.br',
-  'cenariomt.com.br'
-];
-
-function hasWatermarkSuspect(imageUrl) {
-  if (!imageUrl) return false;
-  const lowerUrl = imageUrl.toLowerCase();
-  return CONCORRENTES_WATERMARK.some(domain => lowerUrl.includes(domain));
-}
-
-async function searchCleanAlternativeImage(title) {
-  try {
-    console.log(`  🔍 Buscando imagem real sem marca d'água no Google/DDG para: "${title}"...`);
-    const query = encodeURIComponent(`${title} "foto" (site:mt.gov.br OR site:gov.br OR site:leg.br OR site:mp.br)`);
-    const searchUrl = `https://html.duckduckgo.com/html/?q=${query}`;
-    
-    const { data: html } = await axios.get(searchUrl, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-      },
-      timeout: 12000
-    });
-
-    const $ = cheerio.load(html);
-    const resultLinks = [];
-
-    $('.result__url').each((_, el) => {
-      let linkText = $(el).text().trim();
-      if (linkText) {
-        if (!linkText.startsWith('http')) {
-          linkText = 'https://' + linkText;
-        }
-        resultLinks.push(linkText);
-      }
-    });
-
-    for (const pageUrl of resultLinks.slice(0, 3)) {
-      try {
-        console.log(`  📥 Inspecionando página pública limpa: ${pageUrl}`);
-        const { data: pageHtml } = await axios.get(pageUrl, {
-          headers: {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-          },
-          timeout: 8000
-        });
-        
-        const $page = cheerio.load(pageHtml);
-        const ogImage = $page('meta[property="og:image"]').attr('content') || $page('meta[name="twitter:image"]').attr('content');
-        if (ogImage && ogImage.startsWith('http') && !hasWatermarkSuspect(ogImage)) {
-          console.log(`  ✨ Encontrada imagem real limpa alternativa: ${ogImage}`);
-          return ogImage;
-        }
-      } catch (e) {
-        // Ignora erros de páginas individuais e continua
-      }
-    }
-  } catch (err) {
-    console.error(`  ⚠️ Falha ao pesquisar imagem limpa alternativa: ${err.message}`);
-  }
-  return null;
-}
+const DEFAULT_COVER_IMAGE = 'https://sobreopovo.com.br/assets/logosemfundo.png';
 
 // ─────────────────────────────────────────────
 // Inicializa o cliente Supabase (Service Role)
@@ -161,22 +87,22 @@ export async function isDuplicate(supabase, slug, sourceUrl, title) {
 
 // ─────────────────────────────────────────────
 // Baixa a imagem e faz upload no Supabase Storage
-// Retorna a URL pública da imagem
+// Retorna a URL pública da imagem no Supabase CDN ou imagem padrão do portal
 // ─────────────────────────────────────────────
 async function uploadCoverImage(supabase, imageUrl, slug) {
   if (!imageUrl || typeof imageUrl !== 'string') {
-    console.log(`  📷 Sem imagem de capa válida para: ${slug}.`);
-    return null;
+    console.log(`  📷 Sem imagem de capa na matéria: "${slug}". Usando capa padrão do portal.`);
+    return DEFAULT_COVER_IMAGE;
   }
 
   const cleanUrl = imageUrl.trim();
   if (cleanUrl.toLowerCase() === 'none' || cleanUrl.toLowerCase() === 'null' || (!cleanUrl.startsWith('http://') && !cleanUrl.startsWith('https://'))) {
-    console.log(`  📷 URL de imagem descartada (não é HTTP/HTTPS): "${cleanUrl}"`);
-    return null;
+    console.log(`  📷 URL de imagem inválida descartada: "${cleanUrl}". Usando capa padrão.`);
+    return DEFAULT_COVER_IMAGE;
   }
 
   try {
-    console.log(`  📥 Baixando imagem de capa...`);
+    console.log(`  📥 Baixando imagem de capa original: ${cleanUrl.slice(0, 80)}...`);
     const response = await axios.get(cleanUrl, {
       responseType: 'arraybuffer',
       timeout: 20000,
@@ -203,19 +129,19 @@ async function uploadCoverImage(supabase, imageUrl, slug) {
       });
 
     if (error) {
-      console.error(`  ⚠️  Falha no upload da imagem: ${error.message}`);
-      return cleanUrl; // Usa a URL original como fallback (é HTTP/HTTPS válida)
+      console.error(`  ⚠️ Falha no upload para o Supabase Storage: ${error.message}. Mantendo URL de origem.`);
+      return cleanUrl; // Fallback para a URL direta se for HTTP/HTTPS válida
     }
 
     const { data: publicUrlData } = supabase.storage
       .from(STORAGE_BUCKET)
       .getPublicUrl(fileName);
 
-    console.log(`  ✅ Imagem enviada ao Supabase Storage.`);
+    console.log(`  ✅ Imagem re-hospedada com sucesso no Supabase CDN.`);
     return publicUrlData.publicUrl;
   } catch (err) {
-    console.error(`  ⚠️  Não foi possível baixar a imagem de ${cleanUrl}: ${err.message}`);
-    return cleanUrl.startsWith('http') ? cleanUrl : null;
+    console.error(`  ⚠️ Não foi possível baixar a imagem original (${err.message}). Usando capa padrão.`);
+    return cleanUrl.startsWith('http') ? cleanUrl : DEFAULT_COVER_IMAGE;
   }
 }
 
@@ -223,13 +149,17 @@ async function uploadCoverImage(supabase, imageUrl, slug) {
 // Insere uma notícia no banco de dados
 // ─────────────────────────────────────────────
 async function insertArticle(supabase, article, publicImageUrl) {
+  const finalImage = (publicImageUrl && publicImageUrl !== 'null' && publicImageUrl !== 'undefined')
+    ? publicImageUrl
+    : DEFAULT_COVER_IMAGE;
+
   const payload = {
     slug: article.slug,
     title: article.title,
     summary: article.summary,
     category: article.category,
     author: 'Redação',
-    image: publicImageUrl || null,
+    image: finalImage,
     content: article.content,
     featured: false,
     credits: article.credits,
@@ -275,23 +205,10 @@ export async function publishArticles(rewrittenArticles, dryRun = false) {
         continue;
       }
 
-      // 2. Processar a imagem de capa (Rotas de marcas d'água de concorrentes)
-      let finalImageUrl = article.originalImageUrl;
-      if (hasWatermarkSuspect(finalImageUrl)) {
-        console.log(`  ⚠️ Imagem original suspeita de possuir marca d'água de concorrente: ${finalImageUrl}`);
-        const cleanAlternative = await searchCleanAlternativeImage(article.title);
-        if (cleanAlternative) {
-          finalImageUrl = cleanAlternative;
-        } else {
-          console.log(`  ❌ Nenhuma imagem real limpa alternativa encontrada. Matéria será publicada sem imagem de capa.`);
-          finalImageUrl = null;
-        }
-      }
+      // 2. Processar a imagem de capa original e enviar para o Supabase Storage
+      const publicImageUrl = await uploadCoverImage(supabase, article.originalImageUrl, article.slug);
 
-      // Upload da imagem de capa para o Storage
-      const publicImageUrl = finalImageUrl ? await uploadCoverImage(supabase, finalImageUrl, article.slug) : null;
-
-      // 3. Inserir no banco
+      // 3. Inserir no banco com garantia de imagem válida (ou fallback padrão do portal)
       await insertArticle(supabase, article, publicImageUrl);
       console.log(`  ✅ Publicado com sucesso! Slug: ${article.slug}`);
       stats.published++;

@@ -5,6 +5,7 @@
  * Uso:
  *   node src/index.js              # Executa o pipeline completo em produção
  *   node src/index.js --dry-run    # Simula todo o fluxo sem gravar dados reais
+ *   node src/index.js --single-test # Processa apenas 1 notícia inédita para teste
  *
  * Variáveis de ambiente obrigatórias (exceto no --dry-run):
  *   GEMINI_API_KEY         — Chave da API do Google Gemini
@@ -49,6 +50,8 @@ async function main() {
 
     // ── FASE DE DEDUPLICAÇÃO PRÉVIA & LIMITAÇÃO DE COTA ───────────
     let articlesToProcess = [];
+    const isSingleTest = process.argv.includes('--single-test') || process.env.SINGLE_TEST === 'true';
+
     if (isDryRun) {
       // No dry-run simulamos apenas com os primeiros 3 artigos coletados
       articlesToProcess = rawArticles.slice(0, 3);
@@ -76,9 +79,16 @@ async function main() {
         process.exit(0);
       }
 
-      // Processa todas as matérias inéditas encontradas a pedido do usuário
-      articlesToProcess = uniqueArticles;
-      console.log(`\n📌 Matérias novas encontradas: ${uniqueArticles.length}. Processando a reescrita e publicação de todas as ${articlesToProcess.length} matérias.`);
+      if (isSingleTest) {
+        // Se for teste de 1 notícia, selecionamos 1 notícia inédita que possui foto de capa original
+        const articleWithPhoto = uniqueArticles.find(a => a.imageUrl && typeof a.imageUrl === 'string' && a.imageUrl.startsWith('http')) || uniqueArticles[0];
+        articlesToProcess = [articleWithPhoto];
+        console.log(`\n🧪 [TESTE DE 1 MATÉRIA] Processando apenas 1 notícia inédita para teste: "${articleWithPhoto.title}"`);
+      } else {
+        // Processa todas as matérias inéditas encontradas
+        articlesToProcess = uniqueArticles;
+        console.log(`\n📌 Matérias novas encontradas: ${uniqueArticles.length}. Processando a reescrita e publicação de todas as ${articlesToProcess.length} matérias.`);
+      }
     }
 
     // ── FASE 2: Reescrita (Gemini) ───────────────────────────────
@@ -98,15 +108,16 @@ async function main() {
     console.log('  ✅ Pipeline concluído com sucesso!');
     console.log(`  ⏱️  Tempo total: ${elapsed}s`);
     console.log(`  📦 Coletados: ${rawArticles.length} artigos`);
-    console.log(`  ✍️  Reescritos: ${rewrittenArticles.length} artigos`);
-    if (!isDryRun) {
-      console.log(`  🚀 Publicados: ${stats.published} | Duplicados: ${stats.skipped} | Erros: ${stats.errors}`);
-    }
+    console.log(`  ✍️  Processados/Reescritos: ${rewrittenArticles.length} artigos`);
+    console.log(`  🚀 Publicados: ${stats.published}`);
+    console.log(`  ⏭️  Duplicados ignorados: ${stats.skipped}`);
+    console.log(`  ❌ Erros: ${stats.errors}`);
     console.log('═══════════════════════════════════════════════════════════\n');
 
     process.exit(0);
+
   } catch (err) {
-    console.error('\n❌ Erro crítico no pipeline:', err.message);
+    console.error('\n❌ ERRO FATAL no pipeline:', err.message);
     console.error(err.stack);
     process.exit(1);
   }

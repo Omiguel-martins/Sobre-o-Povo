@@ -1,36 +1,58 @@
 [
   {
-    "id": "crise-na-familia-bolsonaro",
-    "title": "Crise na Família Bolsonaro",
-    "summary": "Michelle Expõe Desentendimento Político com Flávio Bolsonaro",
-    "category": "Brasil & Política",
-    "date": "2026-06-24T23:20:47-03:00",
-    "author": "Redação",
-    "image": "https://static.congressoemfoco.com.br/2026/02/13/cong_materia/2026/02/13/d10a83_cong_materia_manual_flaviodarecadoamichelle.jpg",
-    "featured": true,
-    "fileName": "2026-06-24-crise-na-familia-bolsonaro.md"
-  },
-  {
-    "id": "ministerio-do-trabalho-resgata-cinco-pessoas-de-condicoes-analogas-a-escravidao-em-empresa-de-reciclagem-de-rondonopolis",
-    "title": "Ministério do Trabalho resgata cinco pessoas de condições análogas à escravidão em empresa de reciclagem de Rondonópolis",
-    "summary": "Uma operação conduzida por auditores da Superintendência Regional de Trabalho e Emprego...",
-    "category": "Brasil & Política",
-    "date": "2026-06-24T19:15:27-03:00",
-    "author": "Redação",
-    "image": "https://media.olhardireto.com.br/cdn-cgi/image/width=1920,quality=75,format=auto/ok1_1782315841328.webp?v=1782305043235",
-    "featured": true,
-    "fileName": "2026-06-24-ministerio-do-trabalho-resgata-cinco-pessoas-de-condicoes-analogas-a-escravidao-em-empresa-de-reciclagem-de-rondonopolis.md"
-  },
-  {
-    "id": "beleza-azul-emanoel-gomes-conquista-o-brasil",
-    "title": "Beleza Azul: Emanoel Gomes conquista o Brasil",
-    "summary": "No universo da música popular, poucos nomes conseguiram se tornar tão icônicos quanto o de Emanoel Gomes...",
-    "category": "Opinião",
-    "date": "2026-06-23T05:42:31-03:00",
-    "author": "Miguel testando o site",
-    "image": "https://dicionariompb.com.br/wp-content/uploads/2023/03/manoel-gomes.jpeg",
+    "id": "operacao-raleda-policia-civil-faccoes-sao-jose-rio-claro-mt",
+    "title": "Operação Raleda Mobiliza Polícia Civil Contra Facções Rivais em Oito Cidades de MT",
+    "summary": "Ação cumpre 35 mandados de prisão e busca e apreensão. Investigados são suspeitos de homicídios, tráfico de drogas e até comércio ilegal de medicamentos proibidos.",
+    "category": "Brasil",
+    "date": "2026-06-29T10:20:00-04:00",
+    "author": "Redação Sobre o Povo",
+    "image": "https://images.unsplash.com/photo-1628155930542-3c7a64e2c833?auto=format&fit=crop&w=800&q=80",
     "featured": false,
-    "fileName": "2026-06-23-beleza-azul-emanoel-gomes-conquista-o-brasil.md"
+    "fileName": "2026-06-29-operacao-raleda-policia-civil-faccoes-sao-jose-rio-claro-mt.md"
+  },
+  {
+    "id": "homem-preso-flagrante-violencia-domestica-faca-rondonopolis",
+    "title": "Homem é Preso em Flagrante em Rondonópolis Após Agredir e Esfaquear Ex-Companheira",
+    "summary": "Vítima de 21 anos sofreu ferimentos na mão e no rosto ao se defender de ataque com arma branca no bairro Rosa Bororo. Suspeito recusava-se a aceitar o fim do relacionamento.",
+    "category": "Cidades",
+    "date": "2026-06-29T10:15:00-04:00",
+    "author": "Redação Sobre o Povo",
+    "image": "https://images.unsplash.com/photo-1560179707-f14e90ef3623?auto=format&fit=crop&w=800&q=80",
+    "featured": false,
+    "fileName": "2026-06-29-homem-preso-flagrante-violencia-domestica-faca-rondonopolis.md"
+  },
+  {
+    "id": "bombeiros-mt-quarto-lugar-desafio-nacional-salvamento-veicular",
+    "title": "Bombeiros Militares de Mato Grosso Conquistam 4º Lugar em Competição Nacional de Resgate",
+    "summary": "Equipe formada por profissionais de Rondonópolis, Primavera do Leste e Jaciara destacou-se na categoria 'Em Desenvolvimento' em Cuiabá.",
+    "category": "Cidades",
+    "date": "2026-06-29T10:10:00-04:00",
+    "author": "Redação Sobre o Povo",
+    "image": "https://images.unsplash.com/photo-1599819811279-d5ad9cccf838?auto=format&fit=crop&w=800&q=80",
+    "featured": false,
+    "fileName": "2026-06-29-bombeiros-mt-quarto-lugar-desafio-nacional-salvamento-veicular.md"
+  },
+  {
+    "id": "defensoria-publica-mt-exonera-subdefensor-geral-investigado-assedio",
+    "title": "Defensoria Pública de MT Exonera 1º Subdefensor-Geral Investigado por Assédio Sexual e Moral",
+    "summary": "Rogério Borges Freitas foi exonerado do cargo administrativo pela defensora pública-geral. Caso é apurado de forma sigilosa pela Corregedoria do órgão estadual.",
+    "category": "Política",
+    "date": "2026-06-29T10:05:00-04:00",
+    "author": "Redação Sobre o Povo",
+    "image": "https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=800&q=80",
+    "featured": false,
+    "fileName": "2026-06-29-defensoria-publica-mt-exonera-subdefensor-geral-investigado-assedio.md"
+  },
+  {
+    "id": "acidente-moto-avenida-parque-barbado-cuiaba-morte",
+    "title": "Tragédia no Barbado: Acidente de Moto Tira a Vida de Condutor de 50 Anos em Cuiabá",
+    "summary": "Fato ocorreu no bairro Jardim das Américas; Polícia Civil e Politec investigam se a queda foi provocada por um mal súbito ou se o motociclista foi fechado por outro veículo que fugiu.",
+    "category": "Cidades",
+    "date": "2026-06-29T10:00:00-04:00",
+    "author": "Redação Sobre o Povo",
+    "image": "https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&w=800&q=80",
+    "featured": false,
+    "fileName": "2026-06-29-acidente-moto-avenida-parque-barbado-cuiaba-morte.md"
   },
   {
     "id": "crescimento-pib-brasil",
@@ -53,6 +75,17 @@
     "image": "https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=1200&q=80",
     "featured": true,
     "fileName": "2026-06-20-seja-bem-vindo-ao-sobre-o-povo.md"
+  },
+  {
+    "id": "festival-cultura-periferia",
+    "title": "Festival de Cultura das Periferias reúne música, artes visuais e literatura",
+    "summary": "Evento gratuito celebra a diversidade e a potência criativa das comunidades urbanas durante o fim de semana.",
+    "category": "Cultura",
+    "date": "2026-06-20T09:30:00-03:00",
+    "author": "Mariana Costa",
+    "image": "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=1200&q=80",
+    "featured": false,
+    "fileName": "2026-06-20-festival-cultura-periferia.md"
   },
   {
     "id": "investimento-saneamento-basico",

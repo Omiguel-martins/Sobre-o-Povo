@@ -65,6 +65,13 @@ async function loadAnunciosFromSupabase() {
           };
         }
       });
+
+      // Se a página inicial já tiver sido renderizada, atualiza com os novos anúncios do Supabase
+      const hash = window.location.hash;
+      const pathname = window.location.pathname;
+      if (hash === '' || hash === '#/' || pathname === '/') {
+        renderHome();
+      }
     }
   } catch (e) {
     console.warn('Erro ao carregar anúncios do Supabase:', e);

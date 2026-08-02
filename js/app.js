@@ -673,8 +673,6 @@ function renderSearchResultsPage(query) {
     `;
   }
 
-  mainContent.innerHTML = htmlContent;
-  
   const clearFilterBtn = document.getElementById('clear-filter-btn');
   if (clearFilterBtn) {
     clearFilterBtn.addEventListener('click', () => {

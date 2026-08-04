@@ -23,7 +23,8 @@ const adConfig = {
   megaTopo: [],
   intermediario: [],
   quadradoLateral: [],
-  arranhaceu: []
+  arranhaceu: [],
+  stickyMobile: []
 };
 
 // Busca TODOS os anúncios ativos ou gerenciáveis diretamente da tabela 'anuncios' do Supabase
@@ -46,6 +47,7 @@ async function loadAnunciosFromSupabase() {
     adConfig.intermediario = [];
     adConfig.quadradoLateral = [];
     adConfig.arranhaceu = [];
+    adConfig.stickyMobile = [];
 
     if (anuncios && anuncios.length > 0) {
       const activeAds = anuncios.filter(a => a.active);
@@ -68,6 +70,7 @@ async function loadAnunciosFromSupabase() {
         renderHome();
       }
     }
+    renderStickyMobileBanner();
   } catch (e) {
     console.warn('Erro ao carregar anúncios do Supabase:', e);
   }
@@ -100,6 +103,7 @@ async function init() {
   await loadAnunciosFromSupabase();
   await loadNoticiasIndex();
   handleRouting();
+  renderStickyMobileBanner();
 }
 
 // Exibe a data atual do portal formatada
@@ -605,6 +609,66 @@ function initAdCarousel(containerId, totalSlides) {
       goToSlide(slideIdx);
     });
   });
+}
+
+// Engine do Banner Fixo de Rodapé no Celular (Sticky Mobile Banner)
+function renderStickyMobileBanner() {
+  if (sessionStorage.getItem('hideStickyMobileAd') === 'true') {
+    const existing = document.getElementById('sticky-mobile-banner-wrapper');
+    if (existing) existing.remove();
+    return;
+  }
+
+  let wrapper = document.getElementById('sticky-mobile-banner-wrapper');
+  if (!wrapper) {
+    wrapper = document.createElement('div');
+    wrapper.id = 'sticky-mobile-banner-wrapper';
+    document.body.appendChild(wrapper);
+  }
+
+  const ads = adConfig.stickyMobile || [];
+  const whatsappUrl = 'https://wa.me/5565993044444?text=Olá!%20Gostaria%20de%20anunciar%20no%20banner%20mobile%20do%20portal%20Sobre%20o%20Povo.';
+
+  if (ads.length > 0) {
+    const ad = ads[0];
+    const linkUrl = ad.link || whatsappUrl;
+    wrapper.innerHTML = `
+      <div class="sticky-mobile-content">
+        <button class="sticky-mobile-close-btn" id="btn-close-sticky-ad" aria-label="Fechar Anúncio">✕</button>
+        <a href="${linkUrl}" target="_blank" rel="noopener noreferrer" class="sticky-mobile-ad-link">
+          ${ad.type === 'video' ? `
+            <video class="sticky-mobile-ad-img" src="${ad.url}" autoplay loop muted playsinline></video>
+          ` : `
+            <img class="sticky-mobile-ad-img" src="${ad.url}" alt="${ad.title || 'Anúncio Mobile'}" />
+          `}
+          <span class="sticky-mobile-placeholder-btn">💬 Toque Aqui</span>
+        </a>
+      </div>
+    `;
+  } else {
+    wrapper.innerHTML = `
+      <div class="sticky-mobile-content">
+        <button class="sticky-mobile-close-btn" id="btn-close-sticky-ad" aria-label="Fechar Anúncio">✕</button>
+        <a href="${whatsappUrl}" target="_blank" rel="noopener noreferrer" class="sticky-mobile-ad-link">
+          <div class="sticky-mobile-placeholder-text">
+            📢 <strong>ANUNCIE AQUI NO MOBILE</strong><br>
+            Sua marca em destaque no celular dos leitores
+          </div>
+          <span class="sticky-mobile-placeholder-btn">💬 Fale Conosco</span>
+        </a>
+      </div>
+    `;
+  }
+
+  const closeBtn = document.getElementById('btn-close-sticky-ad');
+  if (closeBtn) {
+    closeBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      sessionStorage.setItem('hideStickyMobileAd', 'true');
+      wrapper.remove();
+    });
+  }
 }
 
 // Renderiza a Página Inicial (Home) com grid e sidebar
@@ -1273,6 +1337,7 @@ function renderAdminDashboard(user) {
                   <option value="intermediario">Full Banner Intermediário (728x90)</option>
                   <option value="quadradoLateral">Banner Quadrado Lateral (300x250)</option>
                   <option value="arranhaceu">Banner Arranha-céu Lateral (300x600)</option>
+                  <option value="stickyMobile">Banner Fixo Rodapé Mobile (320x50 / 300x100)</option>
                 </select>
               </div>
               <div>
@@ -1759,6 +1824,7 @@ function renderAdminDashboard(user) {
     if (slot === 'intermediario') resolution = '728x90';
     else if (slot === 'quadradoLateral') resolution = '300x250';
     else if (slot === 'arranhaceu') resolution = '300x600';
+    else if (slot === 'stickyMobile') resolution = '320x50';
 
     try {
       let finalImageUrl = inAdImageUrl.value.trim();
@@ -1868,10 +1934,11 @@ function renderAdminDashboard(user) {
       megaTopo: 'Mega Banner Topo (970x250)',
       intermediario: 'Full Banner Intermediário (728x90)',
       quadradoLateral: 'Banner Quadrado Lateral (300x250)',
-      arranhaceu: 'Banner Arranha-céu Lateral (300x600)'
+      arranhaceu: 'Banner Arranha-céu Lateral (300x600)',
+      stickyMobile: 'Banner Fixo Rodapé Mobile (320x50)'
     };
 
-    const slots = ['megaTopo', 'intermediario', 'quadradoLateral', 'arranhaceu'];
+    const slots = ['megaTopo', 'intermediario', 'quadradoLateral', 'arranhaceu', 'stickyMobile'];
 
     let html = '';
 

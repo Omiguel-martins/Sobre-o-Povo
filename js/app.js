@@ -1789,7 +1789,9 @@ function renderAdminDashboard(user) {
 
       btnAdSubmit.textContent = 'Gravando no banco de dados Supabase...';
 
-      const type = (inAdImageFile.files && inAdImageFile.files[0] && inAdImageFile.files[0].type.includes('video')) || finalImageUrl.endsWith('.mp4') ? 'video' : 'image';
+      const isVideoUrl = /\.(mp4|webm|mov|m4v|ogg)(\?.*)?$/i.test(finalImageUrl);
+      const isVideoFile = inAdImageFile.files && inAdImageFile.files[0] && inAdImageFile.files[0].type.startsWith('video/');
+      const type = (isVideoFile || isVideoUrl) ? 'video' : 'image';
 
       if (state.editingAdId) {
         const { error: updateError } = await supabaseClient

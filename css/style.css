@@ -3454,6 +3454,103 @@ textarea.form-control {
   }
 }
 
+/* ============================================================
+   BANNER FIXO DE RODAPÉ MOBILE (Sticky Mobile Footer Banner)
+   ============================================================ */
+#sticky-mobile-banner-wrapper {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  #sticky-mobile-banner-wrapper {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    z-index: 99999;
+    background-color: var(--color-header-bg);
+    border-top: 2px solid var(--color-accent-orange);
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.4);
+    padding: 6px 12px;
+    justify-content: center;
+    align-items: center;
+    animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .sticky-mobile-content {
+    position: relative;
+    width: 100%;
+    max-width: 480px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .sticky-mobile-ad-link {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    text-decoration: none;
+    color: #ffffff;
+    gap: 10px;
+    padding-right: 18px;
+  }
+
+  .sticky-mobile-ad-img {
+    max-height: 48px;
+    width: auto;
+    border-radius: 4px;
+    object-fit: contain;
+  }
+
+  .sticky-mobile-placeholder-text {
+    font-family: var(--font-ui);
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #ffffff;
+    text-align: left;
+    line-height: 1.25;
+  }
+
+  .sticky-mobile-placeholder-btn {
+    background-color: var(--color-accent-orange);
+    color: #ffffff;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 800;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    box-shadow: 0 2px 8px rgba(230, 126, 34, 0.4);
+  }
+
+  .sticky-mobile-close-btn {
+    position: absolute;
+    top: -14px;
+    right: -4px;
+    background: #e74c3c;
+    color: #ffffff;
+    border: none;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    font-size: 11px;
+    font-weight: 900;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+    z-index: 2;
+  }
+}
+
+
 
 
 

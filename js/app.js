@@ -672,6 +672,9 @@ function renderHome() {
 
       <!-- Coluna Lateral (Sidebar) -->
       <aside class="sidebar">
+        <!-- ESP-1: Banner Quadrado Lateral (300x250) -->
+        ${renderAdSpace('quadradoLateral')}
+
         <!-- Widget: Últimas Notícias -->
         <div class="widget-box">
           <h3 class="widget-title">Mais Recentes</h3>
@@ -679,9 +682,6 @@ function renderHome() {
             ${latestSidebar.map(noticia => renderLatestSidebarItem(noticia)).join('')}
           </div>
         </div>
-
-        <!-- ESP-1: Banner Quadrado Lateral (300x250) -->
-        ${renderAdSpace('quadradoLateral')}
 
         <!-- ESP-2: Banner Arranha-céu Lateral (300x600) -->
         ${renderAdSpace('arranhaceu')}
@@ -753,13 +753,16 @@ function renderCategoryPage(category) {
       </div>
 
       <aside class="sidebar">
+        ${renderAdSpace('quadradoLateral')}
+
         <div class="widget-box">
           <h3 class="widget-title">Mais Recentes</h3>
           <div class="latest-list">
             ${latestSidebar.map(noticia => renderLatestSidebarItem(noticia)).join('')}
           </div>
         </div>
-        ${renderAdSpace('quadradoLateral')}
+
+        ${renderAdSpace('arranhaceu')}
       </aside>
     </div>
   `;

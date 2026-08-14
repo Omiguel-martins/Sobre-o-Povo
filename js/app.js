@@ -1352,14 +1352,14 @@ function renderAdminDashboard(user) {
             </div>
 
             <div class="form-group">
-              <label class="form-label" for="ad-image-file">Arte do Anúncio (Upload Direto do Computador para o Supabase)</label>
-              <input type="file" class="form-control" id="ad-image-file" accept="image/*,video/*" style="padding: 0.5rem;" />
-              <p style="font-size: 0.75rem; color: var(--color-text-light); margin-top: 0.35rem;">Escolha o arquivo de imagem/vídeo no seu computador. O site fará o upload direto para o Supabase Storage.</p>
+              <label class="form-label" for="ad-image-file">Arte do Anúncio (Upload Direto: JPG, PNG, GIF Animado, MP4)</label>
+              <input type="file" class="form-control" id="ad-image-file" accept="image/*,video/*,.gif" style="padding: 0.5rem;" />
+              <p style="font-size: 0.75rem; color: var(--color-text-light); margin-top: 0.35rem;">Escolha o arquivo no seu computador (suporta JPG, PNG, GIFs animados ou vídeos MP4). O site fará o upload direto para o Supabase Storage.</p>
             </div>
 
             <div class="form-group">
-              <label class="form-label" for="ad-image-url">Ou URL da Imagem Externa (Opcional)</label>
-              <input type="text" class="form-control" id="ad-image-url" placeholder="Ex: https://wnvpkbddmhnznybvmqam.supabase.co/storage/..." />
+              <label class="form-label" for="ad-image-url">Ou URL Externa da Imagem/GIF/Vídeo (Opcional)</label>
+              <input type="text" class="form-control" id="ad-image-url" placeholder="Ex: https://.../animacao.gif ou https://wnvpkbddmhnznybvmqam.supabase.co/storage/..." />
             </div>
 
             <div class="form-group">

@@ -106,13 +106,35 @@ async function init() {
   renderStickyMobileBanner();
 }
 
-// Exibe a data atual do portal formatada
+// Exibe a data atual do portal formatada (suporta parâmetro query ?mockDate=YYYY-MM-DD para prints de comprovação)
 function updateHeaderDate() {
   const dateElement = document.getElementById('current-date');
   if (dateElement) {
     const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-    const today = new Date();
-    const dateStr = today.toLocaleDateString('pt-BR', options);
+    let targetDate = new Date();
+
+    // Permite mockar a data via parâmetro de URL (?mockDate=YYYY-MM-DD ou #/?mockDate=YYYY-MM-DD)
+    try {
+      const searchParams = new URLSearchParams(window.location.search || window.location.hash.split('?')[1]);
+      const mockDate = searchParams.get('mockDate');
+      if (mockDate) {
+        const parts = mockDate.split('-');
+        if (parts.length === 3) {
+          // Formato YYYY-MM-DD (ex: 2026-08-17)
+          if (parts[0].length === 4) {
+            targetDate = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+          } 
+          // Formato DD-MM-YYYY (ex: 17-08-2026)
+          else if (parts[2].length === 4) {
+            targetDate = new Date(parseInt(parts[2], 10), parseInt(parts[1], 10) - 1, parseInt(parts[0], 10));
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('Erro ao processar mockDate:', e);
+    }
+
+    const dateStr = targetDate.toLocaleDateString('pt-BR', options);
     dateElement.textContent = dateStr.charAt(0).toUpperCase() + dateStr.slice(1);
   }
 }
@@ -573,8 +595,16 @@ function initAdCarousel(containerId, totalSlides) {
     const dots = container.querySelectorAll('.ad-carousel-dot');
 
     slides.forEach((s, idx) => {
-      if (idx === currentIdx) s.classList.add('active');
-      else s.classList.remove('active');
+      if (idx === currentIdx) {
+        s.classList.add('active');
+        const video = s.querySelector('video.ad-media-video');
+        if (video) {
+          video.currentTime = 0;
+          video.play().catch(() => {});
+        }
+      } else {
+        s.classList.remove('active');
+      }
     });
 
     dots.forEach((d, idx) => {

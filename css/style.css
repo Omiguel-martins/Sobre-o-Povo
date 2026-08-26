@@ -3242,7 +3242,11 @@ textarea.form-control {
   opacity: 0;
   pointer-events: none;
   z-index: 1;
-  transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  backface-visibility: hidden;
+  will-change: opacity;
+  transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .ad-carousel-slide.active {

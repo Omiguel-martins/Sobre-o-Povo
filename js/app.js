@@ -106,13 +106,12 @@ async function init() {
   renderStickyMobileBanner();
 }
 
-// Exibe a data do portal formatada (Padrão: 22 de Agosto de 2026, Sábado)
+// Exibe a data atual do portal formatada dinamicamente
 function updateHeaderDate() {
   const dateElement = document.getElementById('current-date');
   if (dateElement) {
     const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-    // Padrão definido para 22 de agosto de 2026 (Sábado)
-    let targetDate = new Date(2026, 7, 22);
+    let targetDate = new Date();
 
     // Permite mockar/alterar a data via parâmetro de URL se necessário (?mockDate=YYYY-MM-DD ou #/?mockDate=YYYY-MM-DD)
     try {

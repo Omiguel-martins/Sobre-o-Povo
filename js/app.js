@@ -106,13 +106,13 @@ async function init() {
   renderStickyMobileBanner();
 }
 
-// Exibe a data do portal formatada (Padrão: 17 de Agosto de 2026, Segunda-feira)
+// Exibe a data do portal formatada (Padrão: 22 de Agosto de 2026, Sábado)
 function updateHeaderDate() {
   const dateElement = document.getElementById('current-date');
   if (dateElement) {
     const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-    // Padrão definido para 17 de agosto de 2026 (Segunda-feira)
-    let targetDate = new Date(2026, 7, 17);
+    // Padrão definido para 22 de agosto de 2026 (Sábado)
+    let targetDate = new Date(2026, 7, 22);
 
     // Permite mockar/alterar a data via parâmetro de URL se necessário (?mockDate=YYYY-MM-DD ou #/?mockDate=YYYY-MM-DD)
     try {
@@ -121,11 +121,11 @@ function updateHeaderDate() {
       if (mockDate) {
         const parts = mockDate.split('-');
         if (parts.length === 3) {
-          // Formato YYYY-MM-DD (ex: 2026-08-17)
+          // Formato YYYY-MM-DD (ex: 2026-08-22)
           if (parts[0].length === 4) {
             targetDate = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
           } 
-          // Formato DD-MM-YYYY (ex: 17-08-2026)
+          // Formato DD-MM-YYYY (ex: 22-08-2026)
           else if (parts[2].length === 4) {
             targetDate = new Date(parseInt(parts[2], 10), parseInt(parts[1], 10) - 1, parseInt(parts[0], 10));
           }

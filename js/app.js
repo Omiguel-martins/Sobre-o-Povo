@@ -106,14 +106,15 @@ async function init() {
   renderStickyMobileBanner();
 }
 
-// Exibe a data atual do portal formatada (suporta parâmetro query ?mockDate=YYYY-MM-DD para prints de comprovação)
+// Exibe a data do portal formatada (Padrão: 17 de Agosto de 2026, Segunda-feira)
 function updateHeaderDate() {
   const dateElement = document.getElementById('current-date');
   if (dateElement) {
     const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-    let targetDate = new Date();
+    // Padrão definido para 17 de agosto de 2026 (Segunda-feira)
+    let targetDate = new Date(2026, 7, 17);
 
-    // Permite mockar a data via parâmetro de URL (?mockDate=YYYY-MM-DD ou #/?mockDate=YYYY-MM-DD)
+    // Permite mockar/alterar a data via parâmetro de URL se necessário (?mockDate=YYYY-MM-DD ou #/?mockDate=YYYY-MM-DD)
     try {
       const searchParams = new URLSearchParams(window.location.search || window.location.hash.split('?')[1]);
       const mockDate = searchParams.get('mockDate');

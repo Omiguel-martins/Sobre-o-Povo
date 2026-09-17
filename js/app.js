@@ -113,18 +113,18 @@ function updateHeaderDate() {
     const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
     let targetDate = new Date();
 
-    // Permite mockar/alterar a data via parâmetro de URL se necessário (?mockDate=YYYY-MM-DD ou #/?mockDate=YYYY-MM-DD)
+    // Permite mockar/alterar a data via parâmetro de URL ou localStorage (para prints limpos)
     try {
       const searchParams = new URLSearchParams(window.location.search || window.location.hash.split('?')[1]);
-      const mockDate = searchParams.get('mockDate');
+      const mockDate = searchParams.get('mockDate') || localStorage.getItem('adminMockDate');
       if (mockDate) {
         const parts = mockDate.split('-');
         if (parts.length === 3) {
-          // Formato YYYY-MM-DD (ex: 2026-08-22)
+          // Formato YYYY-MM-DD
           if (parts[0].length === 4) {
             targetDate = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
           } 
-          // Formato DD-MM-YYYY (ex: 22-08-2026)
+          // Formato DD-MM-YYYY
           else if (parts[2].length === 4) {
             targetDate = new Date(parseInt(parts[2], 10), parseInt(parts[1], 10) - 1, parseInt(parts[0], 10));
           }
@@ -1187,7 +1187,16 @@ function renderAdminDashboard(user) {
       <button type="button" class="admin-tab-btn" id="tab-btn-ads">
         📢 Gerenciar Anúncios e Banners
       </button>
-      <button id="btn-logout" style="margin-left: auto; background-color: transparent; border: 1px solid var(--color-border); color: var(--color-text-light); padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; transition: all 0.2s;">
+      
+      <!-- Controle de Data para Prints (Mock Date) -->
+      <div class="mock-date-container" style="display: flex; align-items: center; gap: 0.5rem; margin-left: auto; background: var(--color-bg-secondary); padding: 0.25rem 0.75rem; border-radius: 4px; border: 1px solid var(--color-border);">
+        <label for="admin-mock-date" style="font-size: 0.85rem; font-weight: bold; color: var(--color-text);">Data (Print):</label>
+        <input type="date" id="admin-mock-date" class="form-control" style="padding: 0.25rem; font-size: 0.85rem; width: auto; height: auto;" />
+        <button type="button" id="btn-apply-mock" style="background: var(--color-accent-orange); color: #fff; border: none; padding: 0.25rem 0.75rem; border-radius: 4px; cursor: pointer; font-size: 0.85rem; font-weight: bold;">Aplicar</button>
+        <button type="button" id="btn-clear-mock" style="background: transparent; color: var(--color-text-light); border: 1px solid var(--color-border); padding: 0.25rem 0.5rem; border-radius: 4px; cursor: pointer; font-size: 0.85rem;" title="Restaurar Hoje">Limpar</button>
+      </div>
+
+      <button id="btn-logout" style="margin-left: 1rem; background-color: transparent; border: 1px solid var(--color-border); color: var(--color-text-light); padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; transition: all 0.2s;">
         Sair (Logout)
       </button>
     </div>
@@ -1436,6 +1445,35 @@ function renderAdminDashboard(user) {
     renderAdManagerList();
   });
 
+  // =========================================================================
+  // LÓGICA DO MOCK DATE (DATA SIMULADA)
+  // =========================================================================
+  const mockDateInput = document.getElementById('admin-mock-date');
+  const btnApplyMock = document.getElementById('btn-apply-mock');
+  const btnClearMock = document.getElementById('btn-clear-mock');
+
+  // Recuperar mock atual, se existir
+  const currentMock = localStorage.getItem('adminMockDate');
+  if (currentMock) {
+    mockDateInput.value = currentMock;
+  }
+
+  btnApplyMock.addEventListener('click', () => {
+    if (mockDateInput.value) {
+      localStorage.setItem('adminMockDate', mockDateInput.value);
+      alert('Data de print aplicada com sucesso!\nA página será recarregada para visualizar o efeito.');
+      window.location.reload();
+    } else {
+      alert('Por favor, selecione uma data primeiro.');
+    }
+  });
+
+  btnClearMock.addEventListener('click', () => {
+    localStorage.removeItem('adminMockDate');
+    mockDateInput.value = '';
+    alert('Data restaurada para o dia atual!\nA página será recarregada para visualizar o efeito.');
+    window.location.reload();
+  });
   // Ouvinte do botão de Logout
   document.getElementById('btn-logout').addEventListener('click', async () => {
     if (confirm('Tem certeza que deseja sair do painel administrativo?')) {

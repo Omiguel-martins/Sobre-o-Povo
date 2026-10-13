@@ -1,8 +1,8 @@
 /**
  * Testes do Pipeline de Scraping — Sobre o Povo
- *
+ * 
  * Uso: node tests/test.js
- *
+ * 
  * Testa cada módulo de forma isolada com dados simulados (sem chamar APIs externas).
  */
 
@@ -116,6 +116,44 @@ async function testDataContractValidation() {
   );
 }
 
+import { areNewsDuplicates, deduplicateBatch } from '../src/dedup.js';
+
+async function testDeduplicationModule() {
+  console.log('\n📋 TESTE 4 — Módulo de Deduplicação Inteligente (Mesmo Fato & Intra-Lote)\n');
+
+  const q1 = {
+    title: 'Vereador de Querência e Mais Duas Pessoas Morrem em Acidente Grave na MT-109',
+    sourceUrl: 'https://olhardireto.com.br/1',
+    sourceName: 'Olhar Direto',
+    body: 'Acidente de trânsito em Querência...',
+    imageUrl: 'https://img.com/1.jpg'
+  };
+  const q2 = {
+    title: 'Tragédia em Querência: Vereador e Duas Mulheres Perdem a Vida em Capotamento na Rodovia',
+    sourceUrl: 'https://midianews.com.br/2',
+    sourceName: 'MidiaNews',
+    body: 'Capotamento na MT-109 em Querência...',
+    imageUrl: 'https://img.com/2.jpg'
+  };
+  const q3 = {
+    title: 'Cuiabá: Jovem de 21 anos morre após acidente de moto na Avenida Miguel Sutil',
+    sourceUrl: 'https://g1.globo.com/cuiaba',
+    sourceName: 'G1 MT',
+    body: 'Acidente na Miguel Sutil...',
+    imageUrl: null
+  };
+
+  const dupCheck = areNewsDuplicates(q1, q2);
+  assert(dupCheck.isDuplicate === true, 'Notícias de portais diferentes sobre mesmo fato em Querência detectadas como duplicata');
+
+  const diffCheck = areNewsDuplicates(q1, q3);
+  assert(diffCheck.isDuplicate === false, 'Notícias de cidades e fatos distintos NÃO são marcadas como duplicatas');
+
+  const batch = [q1, q2, q3];
+  const deduped = deduplicateBatch(batch);
+  assert(deduped.length === 2, 'Deduplicação intra-lote consolidou com sucesso o lote para 2 notícias únicas');
+}
+
 // ─────────────────────────────────────────────
 // Executa todos os testes
 // ─────────────────────────────────────────────
@@ -128,6 +166,7 @@ async function runAllTests() {
     await testRewriteModule();
     await testPublishModule();
     await testDataContractValidation();
+    await testDeduplicationModule();
   } catch (err) {
     console.error('\n❌ Erro inesperado durante os testes:', err);
     failed++;

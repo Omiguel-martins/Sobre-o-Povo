@@ -16,66 +16,65 @@ export function createSupabaseClient() {
   return createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 }
 
-const STOP_WORDS = new Set(['de', 'o', 'a', 'e', 'em', 'do', 'da', 'no', 'na', 'para', 'com', 'por', 'um', 'uma', 'os', 'as', 'se', 'ao', 'aos', 'sobre']);
-
-function getKeywords(title) {
-  if (!title) return new Set();
-  const words = title.toLowerCase().match(/\w+/g) || [];
-  return new Set(words.filter(w => !STOP_WORDS.has(w) && w.length > 2));
-}
-
-function calculateJaccard(title1, title2) {
-  const w1 = getKeywords(title1);
-  const w2 = getKeywords(title2);
-  if (w1.size === 0 || w2.size === 0) return 0;
-  
-  const intersection = new Set([...w1].filter(x => w2.has(x)));
-  const union = new Set([...w1, ...w2]);
-  
-  return intersection.size / union.size;
-}
+import { areNewsDuplicates } from './dedup.js';
 
 // ─────────────────────────────────────────────
 // Verifica se a notícia já existe no banco
-// pelo slug, pela URL de origem ou por título
-// altamente similar (últimas 48 horas)
+// pelo slug, pela URL de origem ou por detecção
+// de mesmo fato (últimas 72 horas)
 // ─────────────────────────────────────────────
-export async function isDuplicate(supabase, slug, sourceUrl, title) {
+export async function isDuplicate(supabase, slug, sourceUrl, title, summary = '') {
   // 1. Checa por slug exato
-  const { data: bySlug } = await supabase
-    .from('noticias')
-    .select('id')
-    .eq('slug', slug)
-    .maybeSingle();
-
-  if (bySlug) return true;
-
-  // 2. Checa por URL de origem (campo credits contém a URL original)
-  if (sourceUrl) {
-    const { data: bySource } = await supabase
+  if (slug) {
+    const { data: bySlug } = await supabase
       .from('noticias')
       .select('id')
-      .ilike('credits', `%${sourceUrl}%`)
+      .eq('slug', slug)
       .maybeSingle();
 
-    if (bySource) return true;
+    if (bySlug) return true;
   }
 
-  // 3. Checa similaridade de títulos nas últimas 48 horas (mesmo fato cobrado por portais diferentes)
+  // 2. Checa por URL de origem na coluna dedicada source_url e legados
+  if (sourceUrl) {
+    const cleanUrl = sourceUrl.trim();
+    const { data: bySourceCol } = await supabase
+      .from('noticias')
+      .select('id')
+      .eq('source_url', cleanUrl)
+      .maybeSingle();
+
+    if (bySourceCol) return true;
+
+    // Checa ocorrência em content (comentário HTML) ou credits legado
+    const { data: byLegacy } = await supabase
+      .from('noticias')
+      .select('id')
+      .or(`content.ilike.%${cleanUrl}%,credits.ilike.%${cleanUrl}%`)
+      .maybeSingle();
+
+    if (byLegacy) return true;
+  }
+
+  // 3. Checa detecção de mesmo fato nas últimas 72 horas (portais diferentes cobrindo a mesma pauta)
   if (title) {
-    const twoDaysAgo = new Date();
-    twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
-    
+    const threeDaysAgo = new Date();
+    threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+
     const { data: recentNews } = await supabase
       .from('noticias')
-      .select('title')
-      .gte('date', twoDaysAgo.toISOString());
+      .select('id, title, summary, source_url')
+      .gte('date', threeDaysAgo.toISOString())
+      .order('date', { ascending: false });
 
-    if (recentNews) {
+    if (recentNews && recentNews.length > 0) {
       for (const recent of recentNews) {
-        const similarity = calculateJaccard(title, recent.title);
-        if (similarity > 0.70) { // Bloqueia com mais de 70% de palavras-chave compartilhadas
-          console.log(`  ⚠️  Bloqueado por alta similaridade (${Math.round(similarity * 100)}%) com matéria existente: "${recent.title}"`);
+        const check = areNewsDuplicates(
+          { title, summary, sourceUrl },
+          recent
+        );
+        if (check.isDuplicate) {
+          console.log(`  ⚠️  Bloqueado por duplicidade de fato (${check.reason}) com matéria existente: "${recent.title}"`);
           return true;
         }
       }
@@ -153,6 +152,12 @@ async function insertArticle(supabase, article, publicImageUrl) {
     ? publicImageUrl
     : DEFAULT_COVER_IMAGE;
 
+  // Garante que o comentário invisível com a URL de origem esteja no final do conteúdo
+  const cleanSourceUrl = article.sourceUrl ? article.sourceUrl.trim() : '';
+  const finalContent = cleanSourceUrl
+    ? `${article.content}\n<!-- source_url: ${cleanSourceUrl} -->`
+    : article.content;
+
   const payload = {
     slug: article.slug,
     title: article.title,
@@ -160,9 +165,10 @@ async function insertArticle(supabase, article, publicImageUrl) {
     category: article.category,
     author: 'Redação',
     image: finalImage,
-    content: article.content,
+    content: finalContent,
     featured: false,
     credits: article.credits,
+    source_url: cleanSourceUrl || null,
     date: new Date().toISOString(),
   };
 
@@ -197,8 +203,8 @@ export async function publishArticles(rewrittenArticles, dryRun = false) {
     console.log(`\n  📰 Processando: "${article.title.slice(0, 70)}..."`);
 
     try {
-      // 1. Verificar duplicidade
-      const duplicate = await isDuplicate(supabase, article.slug, article.sourceUrl, article.title);
+      // 1. Verificar duplicidade com o título e resumo reescritos
+      const duplicate = await isDuplicate(supabase, article.slug, article.sourceUrl, article.title, article.summary);
       if (duplicate) {
         console.log(`  ⏭️  Já publicado. Pulando.`);
         stats.skipped++;
